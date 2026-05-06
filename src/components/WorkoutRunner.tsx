@@ -127,7 +127,14 @@ export function WorkoutRunner({ workout, autoStart = false, onExit }: Props) {
     );
   }, [plan, current]);
   const currentSegmentIdx = useMemo(() => {
-    if (!current || current.phase.kind === 'rest') return -1;
+    if (!current) return -1;
+    if (current.phase.kind === 'rest') {
+      // Highlight the upcoming set during rest: phase.setIndex is the
+      // 1-based just-completed set, which is the 0-based index of the
+      // next one. The bar shows it as "current" with fraction 0 — a
+      // queued, ready-to-go look — until the rest ends.
+      return current.phase.setIndex;
+    }
     return exerciseSegments.indexOf(current);
   }, [exerciseSegments, current]);
 
@@ -345,9 +352,13 @@ export function WorkoutRunner({ workout, autoStart = false, onExit }: Props) {
         </div>
 
         {current.phase.kind === 'rest' ? (
-          // Rest: deliberately calm. No timer, no bar — just the title
-          // and the implicit "set N coming up" from the phase label.
-          null
+          // Rest: keep the segment bar visible (so progress is clear)
+          // but skip the timer. The next set lights up as queued.
+          <SegmentBar
+            segments={exerciseSegments}
+            currentIdx={currentSegmentIdx}
+            fraction={0}
+          />
         ) : exerciseSegments.length <= 1 ? (
           <ProgressRing
             phaseKind={current.phase.kind}
