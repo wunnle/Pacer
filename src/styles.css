@@ -43,7 +43,11 @@ button {
   border-radius: var(--radius);
   padding: 12px 16px;
   cursor: pointer;
-  transition: transform 0.05s ease, background 0.15s ease, border-color 0.15s ease;
+  transition: transform 0.05s ease, background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 button:active { transform: scale(0.98); }
 button:disabled { opacity: 0.45; cursor: not-allowed; }
@@ -55,18 +59,21 @@ button.primary {
   font-weight: 600;
 }
 button.danger {
-  background: transparent;
   color: var(--danger);
-  border-color: rgba(248,113,113,0.4);
 }
 button.ghost {
   background: transparent;
   border-color: transparent;
   color: var(--muted);
 }
+button.ghost:hover { color: var(--text); }
+button.ghost.danger { color: var(--danger); }
 button.icon {
-  padding: 10px 12px;
+  padding: 10px;
+  width: 40px;
+  height: 40px;
 }
+button.icon.primary { width: 44px; height: 44px; }
 
 input, select {
   font: inherit;
@@ -78,6 +85,9 @@ input, select {
   width: 100%;
 }
 input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+input[type="number"] { -moz-appearance: textfield; }
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
 .app-header {
   display: flex;
@@ -125,7 +135,6 @@ input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1
 
 .row { display: flex; align-items: center; gap: 8px; }
 .row.between { justify-content: space-between; }
-.row.gap-12 { gap: 12px; }
 .col { display: flex; flex-direction: column; gap: 8px; }
 
 .field { display: flex; flex-direction: column; gap: 6px; }
@@ -134,6 +143,40 @@ input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1
   display: grid;
   grid-template-columns: repeat(2, minmax(0,1fr));
   gap: 10px;
+}
+
+/* Duration input — minutes + seconds side by side */
+.duration-input {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-2);
+  border: 1px solid var(--bg-3);
+  border-radius: 10px;
+  padding: 4px 10px;
+}
+.duration-input input {
+  background: transparent;
+  border: none;
+  padding: 8px 4px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-size: 16px;
+}
+.duration-input input:focus { outline: none; }
+.duration-unit {
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.readout {
+  padding: 10px 12px;
+  background: var(--bg-3);
+  border-radius: 10px;
+  color: var(--muted);
 }
 
 .exercise-card {
@@ -147,8 +190,27 @@ input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1
 }
 .exercise-card .head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .exercise-card .type { color: var(--accent); font-weight: 600; font-size: 13px; letter-spacing: 0.5px; text-transform: uppercase; }
+.exercise-card .ex-icon { color: var(--accent); flex-shrink: 0; }
+
+.drag-handle {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  padding: 4px;
+  width: 28px;
+  height: 28px;
+  cursor: grab;
+  touch-action: none;
+}
+.drag-handle:active { cursor: grabbing; color: var(--text); }
 
 .add-buttons { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
+.add-btn {
+  justify-content: flex-start;
+  padding: 12px 14px;
+  font-size: 14px;
+}
+.add-btn span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .bottom-bar {
   position: sticky;
@@ -166,17 +228,17 @@ input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 .runner .stage {
   background: var(--bg-2);
   border: 1px solid var(--bg-3);
   border-radius: 20px;
-  padding: 24px;
+  padding: 24px 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
   text-align: center;
   flex: 1;
   justify-content: center;
@@ -194,76 +256,141 @@ input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1
 }
 .runner .clock {
   font-variant-numeric: tabular-nums;
-  font-size: 88px;
+  font-size: 76px;
   font-weight: 700;
   line-height: 1;
   letter-spacing: -2px;
 }
-.runner .sub {
-  color: var(--muted);
-  font-size: 14px;
-}
 .runner.fast .stage { background: linear-gradient(180deg, #1f2937 0%, #0b3a32 100%); border-color: #155e58; }
+.runner.fast .progress-ring .bar { stroke: #34d399; }
 .runner.slow .stage { background: linear-gradient(180deg, #131a26 0%, #1d2740 100%); border-color: #25324d; }
+.runner.slow .progress-ring .bar { stroke: var(--accent-2); }
 .runner.warmup .stage { background: linear-gradient(180deg, #1f1814 0%, #2b1d12 100%); border-color: #553a22; }
+.runner.warmup .progress-ring .bar { stroke: #fbbf24; }
 .runner.cooldown .stage { background: linear-gradient(180deg, #11212b 0%, #0d2a36 100%); border-color: #1a4a5c; }
+.runner.cooldown .progress-ring .bar { stroke: #38bdf8; }
 .runner.taichi .stage { background: linear-gradient(180deg, #1a1330 0%, #2a1a4d 100%); border-color: #3a2870; }
+.runner.taichi .progress-ring .bar { stroke: #c084fc; }
 
+.ring-wrap { position: relative; }
 .progress-ring { width: 220px; height: 220px; transform: rotate(-90deg); }
 .progress-ring circle { fill: none; stroke-width: 12; }
 .progress-ring .track { stroke: rgba(255,255,255,0.08); }
 .progress-ring .bar { stroke: var(--accent); stroke-linecap: round; transition: stroke-dashoffset 0.2s linear; }
-
-.dots { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
-.dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.15); }
-.dot.done { background: var(--accent); }
-.dot.active { background: var(--accent-2); transform: scale(1.3); }
-
-.timeline {
+.ring-center {
+  position: absolute;
+  inset: 0;
   display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Fast/slow timeline integrated in stage */
+.fs-timeline {
   width: 100%;
-  height: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+.fs-bar {
+  width: 100%;
+  display: flex;
+  height: 14px;
   border-radius: 999px;
   overflow: hidden;
-  background: rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.05);
+  gap: 2px;
+  padding: 2px;
 }
-.timeline .seg { height: 100%; }
-.timeline .seg.fast { background: var(--accent); }
-.timeline .seg.slow { background: var(--accent-2); opacity: 0.6; }
-.timeline .seg.upcoming { opacity: 0.25; }
+.fs-seg {
+  height: 100%;
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+  transition: opacity 0.25s ease, background 0.25s ease;
+}
+.fs-seg.fast { background: rgba(52, 211, 153, 0.85); }
+.fs-seg.slow { background: rgba(56, 189, 248, 0.85); }
+.fs-seg.past { opacity: 0.85; }
+.fs-seg.future { opacity: 0.18; }
+.fs-seg.current {
+  opacity: 0.35;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.25) inset;
+}
+.fs-seg.current .fs-seg-fill {
+  position: absolute;
+  inset: 0;
+  background: inherit;
+  opacity: 1;
+  transition: width 0.2s linear;
+}
+.fs-seg.current.fast .fs-seg-fill { background: #34d399; }
+.fs-seg.current.slow .fs-seg-fill { background: #38bdf8; }
 
-.up-next {
+.fs-meta {
+  color: var(--muted);
+  font-size: 13px;
+  letter-spacing: 0.5px;
+}
+
+.taichi-sets {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+.dots { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; max-width: 100%; }
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.dot.done { background: #c084fc; }
+.dot.active {
+  background: #c084fc;
+  transform: scale(1.4);
+  box-shadow: 0 0 12px rgba(192, 132, 252, 0.6);
+}
+
+/* Footer strip combining up-next + workout progress */
+.footer-strip {
   background: var(--bg-2);
   border: 1px solid var(--bg-3);
   border-radius: var(--radius);
-  padding: 12px 14px;
+  padding: 10px 14px;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  gap: 4px;
 }
-.up-next .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
-.up-next .name { font-weight: 600; }
-
-.controls { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-
-.tick-pulse {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: var(--accent);
-  opacity: 0;
-  transform: scale(0.5);
-  transition: opacity 0.15s ease, transform 0.15s ease;
+.footer-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  align-items: baseline;
 }
-.tick-pulse.on { opacity: 1; transform: scale(1.1); }
-
-.divider { height: 1px; background: var(--bg-3); margin: 8px 0; }
-
-.link-button {
-  background: transparent;
-  border: none;
-  color: var(--accent);
-  padding: 0;
-  cursor: pointer;
+.footer-label {
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
 }
+.footer-name {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.footer-time {
+  color: var(--muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.footer-row.dim .footer-name { font-weight: 500; color: var(--muted); }
+
+.controls { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 10px; }
+.controls button { padding: 14px 12px; font-size: 14px; }
+.controls button span { font-weight: 500; }

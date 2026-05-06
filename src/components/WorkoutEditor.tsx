@@ -1,8 +1,37 @@
 import { useState } from 'react';
+import {
+  DndContext,
+  PointerSensor,
+  TouchSensor,
+  KeyboardSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import {
+  ArrowLeft,
+  GripVertical,
+  Plus,
+  Snowflake,
+  Sparkles,
+  Sun,
+  Trash2,
+  Waves,
+} from 'lucide-react';
 import type { Exercise, ExerciseType, Workout } from '../types';
 import { EXERCISE_LABELS, exerciseTotalSeconds, workoutTotalSeconds } from '../types';
 import { uid, upsertWorkout } from '../lib/storage';
 import { formatDuration } from '../lib/format';
+import { DurationInput } from './DurationInput';
 
 interface Props {
   workout?: Workout;
@@ -24,24 +53,39 @@ function newExercise(type: ExerciseType): Exercise {
   }
 }
 
+const exerciseIconMap: Record<ExerciseType, typeof Sun> = {
+  warmup: Sun,
+  fastslow: Waves,
+  taichi: Sparkles,
+  cooldown: Snowflake,
+};
+
 export function WorkoutEditor({ workout, onSaved, onCancel }: Props) {
   const [name, setName] = useState(workout?.name ?? 'My workout');
   const [exercises, setExercises] = useState<Exercise[]>(workout?.exercises ?? []);
 
-  const updateAt = (idx: number, patch: Partial<Exercise>) => {
-    setExercises((xs) => xs.map((x, i) => (i === idx ? ({ ...x, ...patch } as Exercise) : x)));
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const updateAt = (id: string, patch: Partial<Exercise>) => {
+    setExercises((xs) => xs.map((x) => (x.id === id ? ({ ...x, ...patch } as Exercise) : x)));
   };
-  const removeAt = (idx: number) => setExercises((xs) => xs.filter((_, i) => i !== idx));
-  const move = (idx: number, dir: -1 | 1) => {
+  const removeAt = (id: string) => setExercises((xs) => xs.filter((x) => x.id !== id));
+  const add = (type: ExerciseType) => setExercises((xs) => [...xs, newExercise(type)]);
+
+  const handleDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
     setExercises((xs) => {
-      const j = idx + dir;
-      if (j < 0 || j >= xs.length) return xs;
-      const next = [...xs];
-      [next[idx], next[j]] = [next[j], next[idx]];
-      return next;
+      const oldIdx = xs.findIndex((x) => x.id === active.id);
+      const newIdx = xs.findIndex((x) => x.id === over.id);
+      if (oldIdx < 0 || newIdx < 0) return xs;
+      return arrayMove(xs, oldIdx, newIdx);
     });
   };
-  const add = (type: ExerciseType) => setExercises((xs) => [...xs, newExercise(type)]);
 
   const save = () => {
     const now = Date.now();
@@ -61,7 +105,9 @@ export function WorkoutEditor({ workout, onSaved, onCancel }: Props) {
   return (
     <>
       <header className="app-header">
-        <button className="ghost" onClick={onCancel}>← Back</button>
+        <button className="ghost icon" onClick={onCancel} aria-label="Back">
+          <ArrowLeft size={20} />
+        </button>
         <div className="subtitle">{formatDuration(total)} total</div>
       </header>
 
@@ -71,28 +117,36 @@ export function WorkoutEditor({ workout, onSaved, onCancel }: Props) {
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Morning walk" />
         </div>
 
-        <div className="list">
-          {exercises.map((ex, i) => (
-            <ExerciseEditor
-              key={ex.id}
-              exercise={ex}
-              onChange={(patch) => updateAt(i, patch)}
-              onRemove={() => removeAt(i)}
-              onUp={i > 0 ? () => move(i, -1) : undefined}
-              onDown={i < exercises.length - 1 ? () => move(i, 1) : undefined}
-            />
-          ))}
-        </div>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={exercises.map((x) => x.id)} strategy={verticalListSortingStrategy}>
+            <div className="list">
+              {exercises.map((ex) => (
+                <SortableExerciseCard
+                  key={ex.id}
+                  exercise={ex}
+                  onChange={(patch) => updateAt(ex.id, patch)}
+                  onRemove={() => removeAt(ex.id)}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
 
         {exercises.length === 0 && (
           <div className="empty">Add a block to begin.</div>
         )}
 
         <div className="add-buttons">
-          <button onClick={() => add('warmup')}>+ Warm-up walk</button>
-          <button onClick={() => add('fastslow')}>+ Fast & slow</button>
-          <button onClick={() => add('taichi')}>+ Tai chi</button>
-          <button onClick={() => add('cooldown')}>+ Cool-down walk</button>
+          {(['warmup', 'fastslow', 'taichi', 'cooldown'] as ExerciseType[]).map((t) => {
+            const Icon = exerciseIconMap[t];
+            return (
+              <button key={t} onClick={() => add(t)} className="add-btn">
+                <Plus size={16} />
+                <Icon size={16} />
+                <span>{EXERCISE_LABELS[t]}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -104,64 +158,82 @@ export function WorkoutEditor({ workout, onSaved, onCancel }: Props) {
   );
 }
 
-function ExerciseEditor({
+function SortableExerciseCard({
   exercise,
   onChange,
   onRemove,
-  onUp,
-  onDown,
 }: {
   exercise: Exercise;
   onChange: (patch: Partial<Exercise>) => void;
   onRemove: () => void;
-  onUp?: () => void;
-  onDown?: () => void;
 }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: exercise.id,
+  });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+    zIndex: isDragging ? 10 : 'auto',
+  };
+  const Icon = exerciseIconMap[exercise.type];
+
   return (
-    <div className="exercise-card">
+    <div ref={setNodeRef} style={style} className="exercise-card">
       <div className="head">
-        <div className="type">{EXERCISE_LABELS[exercise.type]}</div>
-        <div className="row" style={{ gap: 4 }}>
-          <button className="icon ghost" disabled={!onUp} onClick={onUp} aria-label="Move up">↑</button>
-          <button className="icon ghost" disabled={!onDown} onClick={onDown} aria-label="Move down">↓</button>
-          <button className="icon danger" onClick={onRemove} aria-label="Remove">✕</button>
+        <div className="row" style={{ gap: 8, minWidth: 0 }}>
+          <button
+            className="drag-handle"
+            {...attributes}
+            {...listeners}
+            aria-label="Reorder"
+            type="button"
+          >
+            <GripVertical size={18} />
+          </button>
+          <Icon size={16} className="ex-icon" />
+          <div className="type">{EXERCISE_LABELS[exercise.type]}</div>
         </div>
+        <button className="icon ghost danger" onClick={onRemove} aria-label="Remove">
+          <Trash2 size={16} />
+        </button>
       </div>
 
       {exercise.type === 'warmup' || exercise.type === 'cooldown' ? (
-        <div className="fields-grid">
-          <NumField
-            label="Duration (sec)"
-            value={exercise.duration}
-            min={5}
-            onChange={(v) => onChange({ duration: v } as Partial<Exercise>)}
-          />
-          <Readout label="Total" value={formatDuration(exerciseTotalSeconds(exercise))} />
-        </div>
+        <DurationInput
+          label="Duration"
+          value={exercise.duration}
+          min={5}
+          onChange={(v) => onChange({ duration: v } as Partial<Exercise>)}
+        />
       ) : exercise.type === 'fastslow' ? (
-        <div className="fields-grid">
-          <NumField
-            label="Fast (sec)"
-            value={exercise.fastDuration}
-            min={5}
-            onChange={(v) => onChange({ fastDuration: v } as Partial<Exercise>)}
-          />
-          <NumField
-            label="Slow (sec)"
-            value={exercise.slowDuration}
-            min={5}
-            onChange={(v) => onChange({ slowDuration: v } as Partial<Exercise>)}
-          />
-          <NumField
-            label="Repeats"
-            value={exercise.repeats}
-            min={1}
-            onChange={(v) => onChange({ repeats: v } as Partial<Exercise>)}
-          />
-          <Readout label="Total" value={formatDuration(exerciseTotalSeconds(exercise))} />
+        <div className="col" style={{ gap: 10 }}>
+          <div className="fields-grid">
+            <DurationInput
+              label="Fast"
+              value={exercise.fastDuration}
+              min={5}
+              onChange={(v) => onChange({ fastDuration: v } as Partial<Exercise>)}
+            />
+            <DurationInput
+              label="Slow"
+              value={exercise.slowDuration}
+              min={5}
+              onChange={(v) => onChange({ slowDuration: v } as Partial<Exercise>)}
+            />
+          </div>
+          <div className="fields-grid">
+            <NumField
+              label="Repeats"
+              value={exercise.repeats}
+              min={1}
+              onChange={(v) => onChange({ repeats: v } as Partial<Exercise>)}
+            />
+            <Readout label="Total" value={formatDuration(exerciseTotalSeconds(exercise))} />
+          </div>
         </div>
       ) : (
-        <>
+        <div className="col" style={{ gap: 10 }}>
           <div className="field">
             <label>Move name</label>
             <input
@@ -177,15 +249,15 @@ function ExerciseEditor({
               min={1}
               onChange={(v) => onChange({ sets: v } as Partial<Exercise>)}
             />
-            <NumField
-              label="Move duration (sec)"
+            <DurationInput
+              label="Move duration"
               value={exercise.moveDuration}
               min={1}
               onChange={(v) => onChange({ moveDuration: v } as Partial<Exercise>)}
             />
-            <Readout label="Total" value={formatDuration(exerciseTotalSeconds(exercise))} />
           </div>
-        </>
+          <Readout label="Total" value={formatDuration(exerciseTotalSeconds(exercise))} />
+        </div>
       )}
     </div>
   );
@@ -223,9 +295,7 @@ function Readout({ label, value }: { label: string; value: string }) {
   return (
     <div className="field">
       <label>{label}</label>
-      <div style={{ padding: '10px 12px', background: 'var(--bg-3)', borderRadius: 10, color: 'var(--muted)' }}>
-        {value}
-      </div>
+      <div className="readout">{value}</div>
     </div>
   );
 }

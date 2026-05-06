@@ -1,7 +1,10 @@
+import { useState } from 'react';
+import { Pencil, Play, Plus, Trash2, Volume2, VolumeX } from 'lucide-react';
 import type { Workout } from '../types';
 import { workoutTotalSeconds } from '../types';
 import { deleteWorkout } from '../lib/storage';
 import { formatDuration } from '../lib/format';
+import { loadSettings, saveSettings } from '../lib/settings';
 
 interface Props {
   workouts: Workout[];
@@ -12,6 +15,14 @@ interface Props {
 }
 
 export function Home({ workouts, onChange, onNew, onEdit, onStart }: Props) {
+  const [voiceEnabled, setVoiceEnabled] = useState(() => loadSettings().voiceEnabled);
+
+  const toggleVoice = () => {
+    const next = !voiceEnabled;
+    setVoiceEnabled(next);
+    saveSettings({ voiceEnabled: next });
+  };
+
   const handleDelete = (id: string, name: string) => {
     if (!confirm(`Delete "${name}"?`)) return;
     onChange(deleteWorkout(id));
@@ -24,13 +35,26 @@ export function Home({ workouts, onChange, onNew, onEdit, onStart }: Props) {
           <h1>Pacer</h1>
           <div className="subtitle">Real-time workout pacing</div>
         </div>
-        <button className="primary" onClick={onNew}>+ New</button>
+        <div className="row" style={{ gap: 8 }}>
+          <button
+            className="ghost icon"
+            onClick={toggleVoice}
+            aria-label={voiceEnabled ? 'Disable voice' : 'Enable voice'}
+            title={voiceEnabled ? 'Voice on' : 'Voice off'}
+          >
+            {voiceEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+          </button>
+          <button className="primary" onClick={onNew}>
+            <Plus size={16} />
+            <span>New</span>
+          </button>
+        </div>
       </header>
 
       {workouts.length === 0 ? (
         <div className="empty">
           No workouts yet.<br />
-          Tap <strong>+ New</strong> to build one.
+          Tap <strong>New</strong> to build one.
         </div>
       ) : (
         <div className="list">
@@ -42,10 +66,16 @@ export function Home({ workouts, onChange, onNew, onEdit, onStart }: Props) {
                   {w.exercises.length} {w.exercises.length === 1 ? 'block' : 'blocks'} · {formatDuration(workoutTotalSeconds(w))}
                 </div>
               </div>
-              <div className="row" style={{ gap: 6 }}>
-                <button className="icon ghost" onClick={() => onEdit(w.id)} aria-label="Edit">✎</button>
-                <button className="icon ghost" onClick={() => handleDelete(w.id, w.name)} aria-label="Delete">🗑</button>
-                <button className="primary" onClick={() => onStart(w.id)}>Start</button>
+              <div className="row" style={{ gap: 4 }}>
+                <button className="icon ghost" onClick={() => onEdit(w.id)} aria-label="Edit">
+                  <Pencil size={16} />
+                </button>
+                <button className="icon ghost danger" onClick={() => handleDelete(w.id, w.name)} aria-label="Delete">
+                  <Trash2 size={16} />
+                </button>
+                <button className="primary icon" onClick={() => onStart(w.id)} aria-label="Start">
+                  <Play size={16} />
+                </button>
               </div>
             </div>
           ))}

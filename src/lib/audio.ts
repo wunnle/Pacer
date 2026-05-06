@@ -1,3 +1,5 @@
+import { loadSettings } from './settings';
+
 let ctx: AudioContext | null = null;
 
 function getCtx(): AudioContext | null {
@@ -13,6 +15,14 @@ function getCtx(): AudioContext | null {
 
 export function unlockAudio(): void {
   getCtx();
+  // Pre-warm speech synthesis with a silent utterance so the first real one isn't laggy.
+  if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+    try {
+      window.speechSynthesis.getVoices();
+    } catch {
+      /* ignore */
+    }
+  }
 }
 
 function tone(freq: number, durationMs: number, type: OscillatorType = 'sine', gain = 0.18): void {
@@ -57,11 +67,75 @@ export function beepFinish(): void {
   setTimeout(() => tone(784, 240, 'triangle'), 320);
 }
 
+// A single soft click — used for taichi set start/end markers.
+export function clickSound(): void {
+  tone(1000, 50, 'sine', 0.16);
+}
+
+// ---- Voice ----
+
+let cachedVoice: SpeechSynthesisVoice | null = null;
+let cachedVoiceLookup = 0;
+
+const PREFERRED_VOICE_NAMES = [
+  // Chrome / Google
+  'Google UK English Female',
+  'Google US English',
+  'Google UK English Male',
+  // macOS / iOS — natural-sounding Siri-class voices
+  'Samantha',
+  'Karen',
+  'Daniel',
+  'Moira',
+  'Tessa',
+  'Allison',
+  'Ava',
+  'Serena',
+];
+
+function pickVoice(): SpeechSynthesisVoice | null {
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return null;
+  const now = Date.now();
+  if (cachedVoice && now - cachedVoiceLookup < 30_000) return cachedVoice;
+
+  const voices = window.speechSynthesis.getVoices();
+  if (voices.length === 0) return null;
+
+  const enUs = voices.filter((v) => v.lang.toLowerCase().startsWith('en'));
+  const pool = enUs.length > 0 ? enUs : voices;
+
+  // Prefer names containing "Enhanced", "Premium", or "Neural"
+  const upgraded = pool.find((v) => /enhanced|premium|neural/i.test(v.name));
+  if (upgraded) {
+    cachedVoice = upgraded;
+    cachedVoiceLookup = now;
+    return upgraded;
+  }
+
+  // Then known-good named voices
+  for (const name of PREFERRED_VOICE_NAMES) {
+    const v = pool.find((vc) => vc.name === name || vc.name.startsWith(name));
+    if (v) {
+      cachedVoice = v;
+      cachedVoiceLookup = now;
+      return v;
+    }
+  }
+
+  // Fallback: any en-US voice
+  cachedVoice = pool[0] ?? null;
+  cachedVoiceLookup = now;
+  return cachedVoice;
+}
+
 export function speak(text: string): void {
   if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+  if (!loadSettings().voiceEnabled) return;
   try {
     const u = new SpeechSynthesisUtterance(text);
-    u.rate = 1.0;
+    const voice = pickVoice();
+    if (voice) u.voice = voice;
+    u.rate = 0.95;
     u.pitch = 1.0;
     u.volume = 1.0;
     window.speechSynthesis.cancel();

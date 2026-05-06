@@ -1,24 +1,34 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  ArrowLeft,
+  Pause,
+  Play,
+  RotateCcw,
+  SkipForward,
+  Volume2,
+  VolumeX,
+} from 'lucide-react';
 import type { Exercise, Workout } from '../types';
-import { EXERCISE_LABELS, exerciseTotalSeconds } from '../types';
+import { EXERCISE_LABELS } from '../types';
 import { formatClock } from '../lib/format';
 import {
   beepCountdown,
   beepFinish,
   beepStart,
-  beepTick,
   beepTransition,
+  clickSound,
   speak,
   unlockAudio,
 } from '../lib/audio';
 import { HAPTIC_FINISH, HAPTIC_TICK, HAPTIC_TRANSITION, vibrate } from '../lib/haptics';
+import { loadSettings, saveSettings } from '../lib/settings';
 
 type Phase =
-  | { kind: 'warmup'; label: 'Warm-up'; total: number }
-  | { kind: 'fast'; label: 'Fast'; total: number; rep: number; ofRepeats: number }
-  | { kind: 'slow'; label: 'Slow'; total: number; rep: number; ofRepeats: number }
+  | { kind: 'warmup'; total: number }
+  | { kind: 'fast'; total: number; rep: number; ofRepeats: number }
+  | { kind: 'slow'; total: number; rep: number; ofRepeats: number }
   | { kind: 'taichi'; label: string; total: number; setIndex: number; ofSets: number }
-  | { kind: 'cooldown'; label: 'Cool-down'; total: number };
+  | { kind: 'cooldown'; total: number };
 
 interface PlanItem {
   phase: Phase;
@@ -30,18 +40,18 @@ function buildPlan(workout: Workout): PlanItem[] {
   const out: PlanItem[] = [];
   workout.exercises.forEach((ex, exIdx) => {
     if (ex.type === 'warmup') {
-      out.push({ phase: { kind: 'warmup', label: 'Warm-up', total: ex.duration }, exerciseIndex: exIdx, exercise: ex });
+      out.push({ phase: { kind: 'warmup', total: ex.duration }, exerciseIndex: exIdx, exercise: ex });
     } else if (ex.type === 'cooldown') {
-      out.push({ phase: { kind: 'cooldown', label: 'Cool-down', total: ex.duration }, exerciseIndex: exIdx, exercise: ex });
+      out.push({ phase: { kind: 'cooldown', total: ex.duration }, exerciseIndex: exIdx, exercise: ex });
     } else if (ex.type === 'fastslow') {
       for (let r = 0; r < ex.repeats; r++) {
         out.push({
-          phase: { kind: 'fast', label: 'Fast', total: ex.fastDuration, rep: r + 1, ofRepeats: ex.repeats },
+          phase: { kind: 'fast', total: ex.fastDuration, rep: r + 1, ofRepeats: ex.repeats },
           exerciseIndex: exIdx,
           exercise: ex,
         });
         out.push({
-          phase: { kind: 'slow', label: 'Slow', total: ex.slowDuration, rep: r + 1, ofRepeats: ex.repeats },
+          phase: { kind: 'slow', total: ex.slowDuration, rep: r + 1, ofRepeats: ex.repeats },
           exerciseIndex: exIdx,
           exercise: ex,
         });
@@ -70,11 +80,11 @@ export function WorkoutRunner({ workout, onExit }: Props) {
   const [elapsedMs, setElapsedMs] = useState(0);
   const [running, setRunning] = useState(false);
   const [done, setDone] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(() => loadSettings().voiceEnabled);
 
   const startedAtRef = useRef<number | null>(null);
   const baseElapsedRef = useRef(0);
   const rafRef = useRef<number | null>(null);
-  const lastTickSecRef = useRef<number>(-1);
   const lastCountdownSecRef = useRef<number>(-1);
 
   const current = plan[stepIdx];
@@ -89,7 +99,6 @@ export function WorkoutRunner({ workout, onExit }: Props) {
     return s + elapsedMs / 1000;
   }, [plan, stepIdx, elapsedMs]);
 
-  // RAF tick loop
   useEffect(() => {
     if (!running) return;
     const tick = () => {
@@ -106,12 +115,14 @@ export function WorkoutRunner({ workout, onExit }: Props) {
     };
   }, [running]);
 
-  // Phase transition
   useEffect(() => {
     if (!running || !current) return;
     if (elapsedMs >= phaseTotalMs && phaseTotalMs > 0) {
       const nextIdx = stepIdx + 1;
       if (nextIdx >= plan.length) {
+        // Final segment finished. If last phase is a taichi set, give it a clean
+        // closing click before the finish fanfare; otherwise finish directly.
+        if (current.phase.kind === 'taichi') clickSound();
         setRunning(false);
         setDone(true);
         beepFinish();
@@ -119,40 +130,36 @@ export function WorkoutRunner({ workout, onExit }: Props) {
         speak('Workout complete');
       } else {
         const nextItem = plan[nextIdx];
-        beepTransition();
-        vibrate(HAPTIC_TRANSITION);
-        announce(nextItem.phase);
+        // For taichi → taichi (next set), use a single soft click. For other
+        // transitions, use the more emphatic two-tone transition beep.
+        if (current.phase.kind === 'taichi' && nextItem.phase.kind === 'taichi') {
+          clickSound();
+        } else {
+          beepTransition();
+          vibrate(HAPTIC_TRANSITION);
+          announce(nextItem.phase);
+        }
         setStepIdx(nextIdx);
         setElapsedMs(0);
         baseElapsedRef.current = 0;
         startedAtRef.current = performance.now();
-        lastTickSecRef.current = -1;
         lastCountdownSecRef.current = -1;
       }
     }
   }, [elapsedMs, phaseTotalMs, running, current, stepIdx, plan]);
 
-  // Per-second cues: tick for taichi, countdown beeps in last 3 seconds
   useEffect(() => {
     if (!running || !current) return;
-    const elapsedSec = Math.floor(elapsedMs / 1000);
+    // Countdown beeps in last 3s — only for non-taichi phases.
+    if (current.phase.kind === 'taichi') return;
     const remainingSec = Math.ceil((phaseTotalMs - elapsedMs) / 1000);
-
-    if (current.phase.kind === 'taichi' && elapsedSec !== lastTickSecRef.current) {
-      lastTickSecRef.current = elapsedSec;
-      if (elapsedSec > 0) {
-        beepTick();
-        vibrate(HAPTIC_TICK);
-      }
-    }
-
     if (remainingSec > 0 && remainingSec <= 3 && remainingSec !== lastCountdownSecRef.current) {
       lastCountdownSecRef.current = remainingSec;
       beepCountdown();
+      vibrate(HAPTIC_TICK);
     }
   }, [elapsedMs, phaseTotalMs, running, current]);
 
-  // Wake lock
   useEffect(() => {
     if (!running) return;
     let lock: WakeLockSentinel | null = null;
@@ -182,9 +189,14 @@ export function WorkoutRunner({ workout, onExit }: Props) {
     }
     if (!current) return;
     if (stepIdx === 0 && elapsedMs === 0) {
-      beepStart();
-      vibrate([40, 40, 40]);
-      announce(plan[0].phase);
+      // First start: click for taichi, full fanfare otherwise.
+      if (plan[0].phase.kind === 'taichi') {
+        clickSound();
+      } else {
+        beepStart();
+        vibrate([40, 40, 40]);
+        announce(plan[0].phase);
+      }
     }
     startedAtRef.current = performance.now();
     setRunning(true);
@@ -206,15 +218,22 @@ export function WorkoutRunner({ workout, onExit }: Props) {
     baseElapsedRef.current = 0;
     setRunning(false);
     setDone(false);
-    lastTickSecRef.current = -1;
     lastCountdownSecRef.current = -1;
+  };
+
+  const toggleVoice = () => {
+    const v = !voiceEnabled;
+    setVoiceEnabled(v);
+    saveSettings({ voiceEnabled: v });
   };
 
   if (!current) {
     return (
       <>
         <header className="app-header">
-          <button className="ghost" onClick={onExit}>← Back</button>
+          <button className="ghost icon" onClick={onExit} aria-label="Back">
+            <ArrowLeft size={20} />
+          </button>
         </header>
         <div className="empty">This workout has no blocks.</div>
       </>
@@ -226,71 +245,97 @@ export function WorkoutRunner({ workout, onExit }: Props) {
   return (
     <div className={`runner ${phaseClass}`}>
       <header className="app-header">
-        <button className="ghost" onClick={onExit}>← Exit</button>
+        <button className="ghost icon" onClick={onExit} aria-label="Exit">
+          <ArrowLeft size={20} />
+        </button>
         <div className="subtitle">{workout.name}</div>
+        <button
+          className="ghost icon"
+          onClick={toggleVoice}
+          aria-label={voiceEnabled ? 'Disable voice' : 'Enable voice'}
+          title={voiceEnabled ? 'Voice on' : 'Voice off'}
+        >
+          {voiceEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
+        </button>
       </header>
 
       <Stage
-        phase={current.phase}
+        item={current}
         remainingMs={remainingMs}
         totalMs={phaseTotalMs}
         done={done}
       />
 
-      <ExtraVisuals item={current} elapsedMs={elapsedMs} />
-
-      {next && !done && (
-        <div className="up-next">
-          <div className="col" style={{ gap: 2 }}>
-            <div className="label">Up next</div>
-            <div className="name">{phaseHeadline(next.phase)}</div>
+      <div className="footer-strip">
+        {next && !done ? (
+          <div className="footer-row">
+            <div className="footer-label">Up next</div>
+            <div className="footer-name">{phaseHeadline(next.phase)}</div>
+            <div className="footer-time">{formatClock(next.phase.total)}</div>
           </div>
-          <div className="meta" style={{ color: 'var(--muted)' }}>{formatClock(next.phase.total)}</div>
-        </div>
-      )}
-
-      <div className="up-next">
-        <div className="col" style={{ gap: 2 }}>
-          <div className="label">Workout progress</div>
-          <div className="name">{Math.min(plan.length, stepIdx + 1)} / {plan.length} segments</div>
-        </div>
-        <div className="meta" style={{ color: 'var(--muted)' }}>
-          {formatClock(elapsedAcrossSec)} / {formatClock(totalSec)}
+        ) : (
+          <div className="footer-row">
+            <div className="footer-label">Final segment</div>
+            <div className="footer-name">{done ? 'Workout complete' : phaseHeadline(current.phase)}</div>
+            <div className="footer-time" />
+          </div>
+        )}
+        <div className="footer-row dim">
+          <div className="footer-label">Workout</div>
+          <div className="footer-name">{Math.min(plan.length, stepIdx + 1)} / {plan.length}</div>
+          <div className="footer-time">
+            {formatClock(elapsedAcrossSec)} / {formatClock(totalSec)}
+          </div>
         </div>
       </div>
 
       <div className="controls">
-        <button onClick={restart}>↺ Restart</button>
+        <button onClick={restart} aria-label="Restart">
+          <RotateCcw size={18} />
+          <span>Restart</span>
+        </button>
         {running ? (
-          <button className="primary" onClick={pause}>⏸ Pause</button>
+          <button className="primary" onClick={pause} aria-label="Pause">
+            <Pause size={18} />
+            <span>Pause</span>
+          </button>
         ) : (
-          <button className="primary" onClick={start}>{done ? '↻ Again' : (elapsedMs > 0 ? '▶ Resume' : '▶ Start')}</button>
+          <button className="primary" onClick={start} aria-label={done ? 'Restart' : 'Start'}>
+            <Play size={18} />
+            <span>{done ? 'Again' : (elapsedMs > 0 ? 'Resume' : 'Start')}</span>
+          </button>
         )}
-        <button onClick={skip} disabled={done}>⏭ Skip</button>
+        <button onClick={skip} disabled={done} aria-label="Skip">
+          <SkipForward size={18} />
+          <span>Skip</span>
+        </button>
       </div>
     </div>
   );
 }
 
 function Stage({
-  phase,
+  item,
   remainingMs,
   totalMs,
   done,
 }: {
-  phase: Phase;
+  item: PlanItem;
   remainingMs: number;
   totalMs: number;
   done: boolean;
 }) {
+  const { phase, exercise } = item;
   const fraction = totalMs > 0 ? Math.min(1, Math.max(0, 1 - remainingMs / totalMs)) : 0;
   const r = 100;
   const c = 2 * Math.PI * r;
+
   return (
     <div className="stage">
       <div className="phase-label">{phaseLabel(phase)}</div>
       <div className="phase-title">{phaseHeadline(phase)}</div>
-      <div style={{ position: 'relative' }}>
+
+      <div className="ring-wrap">
         <svg className="progress-ring" viewBox="0 0 220 220">
           <circle className="track" cx="110" cy="110" r={r} />
           <circle
@@ -302,79 +347,94 @@ function Stage({
             strokeDashoffset={c * (1 - fraction)}
           />
         </svg>
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
+        <div className="ring-center">
           <div className="clock">{done ? 'Done' : formatClock(remainingMs / 1000)}</div>
         </div>
+      </div>
+
+      {(phase.kind === 'fast' || phase.kind === 'slow') && exercise.type === 'fastslow' && (
+        <FastSlowTimeline
+          fastDuration={exercise.fastDuration}
+          slowDuration={exercise.slowDuration}
+          repeats={exercise.repeats}
+          currentRep={phase.rep}
+          currentIsFast={phase.kind === 'fast'}
+          fraction={fraction}
+        />
+      )}
+
+      {phase.kind === 'taichi' && (
+        <TaichiSets total={phase.ofSets} current={phase.setIndex} />
+      )}
+    </div>
+  );
+}
+
+function FastSlowTimeline({
+  fastDuration,
+  slowDuration,
+  repeats,
+  currentRep,
+  currentIsFast,
+  fraction,
+}: {
+  fastDuration: number;
+  slowDuration: number;
+  repeats: number;
+  currentRep: number;
+  currentIsFast: boolean;
+  fraction: number;
+}) {
+  const segments: { kind: 'fast' | 'slow'; duration: number; status: 'past' | 'current' | 'future' }[] = [];
+  for (let r = 1; r <= repeats; r++) {
+    for (const kind of ['fast', 'slow'] as const) {
+      let status: 'past' | 'current' | 'future' = 'future';
+      if (r < currentRep) status = 'past';
+      else if (r === currentRep) {
+        if (kind === 'fast') status = currentIsFast ? 'current' : 'past';
+        else status = currentIsFast ? 'future' : 'current';
+      }
+      segments.push({ kind, duration: kind === 'fast' ? fastDuration : slowDuration, status });
+    }
+  }
+
+  return (
+    <div className="fs-timeline">
+      <div className="fs-bar">
+        {segments.map((s, i) => (
+          <div
+            key={i}
+            className={`fs-seg ${s.kind} ${s.status}`}
+            style={{ flex: `${s.duration} 0 0` }}
+          >
+            {s.status === 'current' && (
+              <div className="fs-seg-fill" style={{ width: `${fraction * 100}%` }} />
+            )}
+          </div>
+        ))}
+      </div>
+      <div className="fs-meta">
+        Rep {currentRep} of {repeats}
       </div>
     </div>
   );
 }
 
-function ExtraVisuals({ item, elapsedMs }: { item: PlanItem; elapsedMs: number }) {
-  const { phase, exercise } = item;
-
-  if (phase.kind === 'taichi' && exercise.type === 'taichi') {
-    const elapsedSec = Math.floor(elapsedMs / 1000);
-    const pulseOn = elapsedSec !== Math.floor((elapsedMs - 50) / 1000);
-    return (
-      <div className="card row between">
-        <div className="col" style={{ gap: 2 }}>
-          <div className="label" style={{ color: 'var(--muted)', fontSize: 12, textTransform: 'uppercase', letterSpacing: 1 }}>
-            Set
-          </div>
-          <div style={{ fontWeight: 600 }}>{phase.setIndex} of {phase.ofSets}</div>
-        </div>
-        <div className={`tick-pulse ${pulseOn ? 'on' : ''}`} />
-        <div className="dots">
-          {Array.from({ length: phase.ofSets }).map((_, i) => (
-            <div
-              key={i}
-              className={`dot ${i + 1 < phase.setIndex ? 'done' : i + 1 === phase.setIndex ? 'active' : ''}`}
-            />
-          ))}
-        </div>
+function TaichiSets({ total, current }: { total: number; current: number }) {
+  const dots = Array.from({ length: total }, (_, i) => i + 1);
+  return (
+    <div className="taichi-sets">
+      <div className="dots">
+        {dots.map((n) => (
+          <div
+            key={n}
+            className={`dot ${n < current ? 'done' : n === current ? 'active' : ''}`}
+          />
+        ))}
       </div>
-    );
-  }
-
-  if ((phase.kind === 'fast' || phase.kind === 'slow') && exercise.type === 'fastslow') {
-    const totalSegments = exercise.repeats * 2;
-    const currentSegment = (phase.rep - 1) * 2 + (phase.kind === 'fast' ? 0 : 1);
-    return (
-      <div className="card col" style={{ gap: 10 }}>
-        <div className="row between">
-          <div style={{ fontWeight: 600 }}>Rep {phase.rep} of {phase.ofRepeats}</div>
-          <div style={{ color: 'var(--muted)', fontSize: 13 }}>
-            {phase.kind === 'fast' ? `then slow ${exercise.slowDuration}s` : `then fast ${exercise.fastDuration}s`}
-          </div>
-        </div>
-        <div className="timeline">
-          {Array.from({ length: totalSegments }).map((_, i) => {
-            const isFast = i % 2 === 0;
-            const flexBasis = isFast ? exercise.fastDuration : exercise.slowDuration;
-            const cls = i < currentSegment ? '' : i === currentSegment ? '' : 'upcoming';
-            return (
-              <div
-                key={i}
-                className={`seg ${isFast ? 'fast' : 'slow'} ${cls}`}
-                style={{ flex: `${flexBasis} 0 0` }}
-              />
-            );
-          })}
-        </div>
-      </div>
-    );
-  }
-
-  return null;
+      <div className="fs-meta">Set {current} of {total}</div>
+    </div>
+  );
 }
 
 function phaseLabel(p: Phase): string {
@@ -403,8 +463,6 @@ function announce(p: Phase): void {
     case 'cooldown': speak('Cool down walk'); return;
     case 'fast': speak('Fast'); return;
     case 'slow': speak('Slow'); return;
-    case 'taichi': speak(p.label); return;
+    case 'taichi': /* taichi never uses voice; clicks only */ return;
   }
 }
-
-void exerciseTotalSeconds;
