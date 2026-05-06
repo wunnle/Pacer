@@ -43,7 +43,7 @@ export function Home({ workouts, onChange, onNew, onEdit, onStart }: Props) {
         </div>
         <div className="row" style={{ gap: 4 }}>
           <button
-            className="ghost icon"
+            className={`icon toggle ${sfxEnabled ? 'on' : 'off'}`}
             onClick={toggleSfx}
             aria-label={sfxEnabled ? 'Disable sounds' : 'Enable sounds'}
             title={sfxEnabled ? 'Sounds on' : 'Sounds off'}
@@ -51,7 +51,7 @@ export function Home({ workouts, onChange, onNew, onEdit, onStart }: Props) {
             {sfxEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
           </button>
           <button
-            className="ghost icon"
+            className={`icon toggle ${voiceEnabled ? 'on' : 'off'}`}
             onClick={toggleVoice}
             aria-label={voiceEnabled ? 'Disable voice' : 'Enable voice'}
             title={voiceEnabled ? 'Voice on' : 'Voice off'}

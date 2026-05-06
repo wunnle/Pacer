@@ -267,7 +267,7 @@ export function WorkoutRunner({ workout, onExit }: Props) {
         <div className="subtitle">{workout.name}</div>
         <div className="row" style={{ gap: 4 }}>
           <button
-            className="ghost icon"
+            className={`icon toggle ${sfxEnabled ? 'on' : 'off'}`}
             onClick={toggleSfx}
             aria-label={sfxEnabled ? 'Disable sounds' : 'Enable sounds'}
             title={sfxEnabled ? 'Sounds on' : 'Sounds off'}
@@ -275,7 +275,7 @@ export function WorkoutRunner({ workout, onExit }: Props) {
             {sfxEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
           </button>
           <button
-            className="ghost icon"
+            className={`icon toggle ${voiceEnabled ? 'on' : 'off'}`}
             onClick={toggleVoice}
             aria-label={voiceEnabled ? 'Disable voice' : 'Enable voice'}
             title={voiceEnabled ? 'Voice on' : 'Voice off'}
