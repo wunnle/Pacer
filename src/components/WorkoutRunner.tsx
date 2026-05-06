@@ -14,7 +14,6 @@ import {
   VolumeX,
 } from 'lucide-react';
 import type { Exercise, Workout } from '../types';
-import { EXERCISE_LABELS } from '../types';
 import { formatClock } from '../lib/format';
 import {
   beepCountdown,
@@ -335,7 +334,9 @@ export function WorkoutRunner({ workout, autoStart = false, onExit }: Props) {
       </header>
 
       <div className="stage">
-        <div className="phase-label">{phaseLabel(current.phase)}</div>
+        {phaseLabel(current.phase) && (
+          <div className="phase-label">{phaseLabel(current.phase)}</div>
+        )}
         <div className="phase-title">
           {current.phase.kind === 'fast' && <Rabbit size={26} aria-hidden />}
           {current.phase.kind === 'slow' && <Turtle size={26} aria-hidden />}
@@ -478,14 +479,17 @@ function SegmentBar({
   );
 }
 
-function phaseLabel(p: Phase): string {
+function phaseLabel(p: Phase): string | null {
   switch (p.kind) {
-    case 'warmup': return EXERCISE_LABELS.warmup;
-    case 'cooldown': return EXERCISE_LABELS.cooldown;
-    case 'fast': return `Fast · rep ${p.rep}/${p.ofRepeats}`;
-    case 'slow': return `Slow · rep ${p.rep}/${p.ofRepeats}`;
-    case 'taichi': return `Tai chi · set ${p.setIndex}/${p.ofSets}`;
-    case 'rest': return `Rest · before set ${p.setIndex + 1}/${p.ofSets}`;
+    case 'warmup':
+    case 'cooldown':
+      // Same as the headline below — the label would just be a quieter
+      // duplicate, so we skip it.
+      return null;
+    case 'fast': return `Rep ${p.rep}/${p.ofRepeats}`;
+    case 'slow': return `Rep ${p.rep}/${p.ofRepeats}`;
+    case 'taichi': return `Set ${p.setIndex}/${p.ofSets}`;
+    case 'rest': return `Before set ${p.setIndex + 1}/${p.ofSets}`;
   }
 }
 
