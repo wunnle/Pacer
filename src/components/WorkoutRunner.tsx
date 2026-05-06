@@ -213,7 +213,7 @@ export function WorkoutRunner({ workout, autoStart = false, onExit }: Props) {
     const remainingSec = Math.ceil((phaseTotalMs - elapsedMs) / 1000);
     if (remainingSec > 0 && remainingSec <= 3 && remainingSec !== lastCountdownSecRef.current) {
       lastCountdownSecRef.current = remainingSec;
-      beepCountdown();
+      beepCountdown(remainingSec);
       vibrate(HAPTIC_TICK);
     }
   }, [elapsedMs, phaseTotalMs, running, current]);

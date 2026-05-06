@@ -78,8 +78,14 @@ export function beepTick(): void {
   tone(880, 80, 'sine', 0.12);
 }
 
-export function beepCountdown(): void {
-  tone(660, 120, 'square', 0.14);
+export function beepCountdown(remainingSec: number): void {
+  // Soft ascending sine chime instead of a square-wave alarm.
+  // 3 → 2 → 1 climbs in pitch with a touch more presence on the
+  // last tone, so it feels like "ready to switch" not "alert".
+  const freqs: Record<number, number> = { 3: 620, 2: 740, 1: 880 };
+  const freq = freqs[remainingSec] ?? 740;
+  const gain = remainingSec === 1 ? 0.14 : 0.12;
+  tone(freq, 80, 'sine', gain);
 }
 
 export function beepStart(): void {
