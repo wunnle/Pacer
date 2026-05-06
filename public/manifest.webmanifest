@@ -1,0 +1,13 @@
+{
+  "name": "Pacer",
+  "short_name": "Pacer",
+  "description": "Real-time workout pacing & guidance",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b0f17",
+  "theme_color": "#0b0f17",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
