@@ -17,6 +17,18 @@ function getCtx(): AudioContext | null {
 export function unlockAudio(): void {
   const c = getCtx();
   if (!c) return;
+  // Tell iOS Safari this is playback audio (Safari 16.4+), so it
+  // plays even with the physical silent switch flipped on. Without
+  // this the audio session defaults to "auto" which is ambient and
+  // honors the mute switch — most users don't think to toggle it.
+  const nav = navigator as Navigator & { audioSession?: { type: string } };
+  if (nav.audioSession) {
+    try {
+      nav.audioSession.type = 'playback';
+    } catch {
+      /* ignore */
+    }
+  }
   // iOS Safari refuses to fully initialize the audio output until
   // *something* plays from a user gesture. Without this, the very
   // first tone scheduled in the same call stack as the start tap can
