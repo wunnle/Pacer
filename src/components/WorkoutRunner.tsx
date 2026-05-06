@@ -76,10 +76,11 @@ function buildPlan(workout: Workout): PlanItem[] {
 
 interface Props {
   workout: Workout;
+  autoStart?: boolean;
   onExit: () => void;
 }
 
-export function WorkoutRunner({ workout, onExit }: Props) {
+export function WorkoutRunner({ workout, autoStart = false, onExit }: Props) {
   const plan = useMemo(() => buildPlan(workout), [workout]);
   const [stepIdx, setStepIdx] = useState(0);
   const [elapsedMs, setElapsedMs] = useState(0);
@@ -206,6 +207,15 @@ export function WorkoutRunner({ workout, onExit }: Props) {
       lock?.release().catch(() => { /* ignore */ });
     };
   }, [running]);
+
+  const autoStartFiredRef = useRef(false);
+  useEffect(() => {
+    if (autoStart && !autoStartFiredRef.current) {
+      autoStartFiredRef.current = true;
+      start();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoStart]);
 
   const start = () => {
     unlockAudio();

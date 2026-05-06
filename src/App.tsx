@@ -8,7 +8,7 @@ import { WorkoutRunner } from './components/WorkoutRunner';
 type Screen =
   | { name: 'home' }
   | { name: 'editor'; workoutId?: string }
-  | { name: 'runner'; workoutId: string };
+  | { name: 'runner'; workoutId: string; autoStart?: boolean };
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>({ name: 'home' });
@@ -29,7 +29,7 @@ export default function App() {
         onChange={setWorkouts}
         onNew={() => setScreen({ name: 'editor' })}
         onEdit={(id) => setScreen({ name: 'editor', workoutId: id })}
-        onStart={(id) => setScreen({ name: 'runner', workoutId: id })}
+        onStart={(id) => setScreen({ name: 'runner', workoutId: id, autoStart: true })}
       />
     );
   }
@@ -56,6 +56,7 @@ export default function App() {
   return (
     <WorkoutRunner
       workout={workout}
+      autoStart={screen.autoStart ?? false}
       onExit={() => setScreen({ name: 'home' })}
     />
   );
