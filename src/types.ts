@@ -20,6 +20,7 @@ export interface TaichiMoves {
   name: string;
   sets: number;
   moveDuration: number;
+  restDuration: number;
 }
 
 export interface CoolDownWalk {
@@ -53,7 +54,7 @@ export function exerciseTotalSeconds(ex: Exercise): number {
     case 'fastslow':
       return (ex.fastDuration + ex.slowDuration) * ex.repeats;
     case 'taichi':
-      return ex.moveDuration * ex.sets;
+      return ex.moveDuration * ex.sets + (ex.restDuration ?? 0) * Math.max(0, ex.sets - 1);
   }
 }
 

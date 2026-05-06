@@ -307,6 +307,8 @@ button.toggle.on {
 .runner.warmup .stage { background: linear-gradient(180deg, #1f1c08 0%, #2d2810 100%); border-color: #4d4318; }
 .runner.cooldown .stage { background: linear-gradient(180deg, #11212b 0%, #0d2a36 100%); border-color: #1a4a5c; }
 .runner.taichi .stage { background: linear-gradient(180deg, #1a1330 0%, #2a1a4d 100%); border-color: #3a2870; }
+.runner.rest .stage { background: linear-gradient(180deg, #1a1d22 0%, #20252e 100%); border-color: #2c3340; }
+.runner.rest .phase-title svg { color: #94a3b8; }
 
 /* Progress ring — used for single-segment exercises (warm-up, cool-down)
    where a continuous radial countdown reads cleaner than a single tall bar. */
@@ -324,6 +326,7 @@ button.toggle.on {
 .progress-ring.fast .bar     { stroke: #34d399; }
 .progress-ring.slow .bar     { stroke: #38bdf8; }
 .progress-ring.taichi .bar   { stroke: #c084fc; }
+.progress-ring.rest .bar     { stroke: #94a3b8; }
 .ring-center {
   position: absolute;
   inset: 0;
@@ -360,6 +363,7 @@ button.toggle.on {
 .seg.fast    { --seg-color: #34d399; }
 .seg.slow    { --seg-color: #38bdf8; }
 .seg.taichi  { --seg-color: #c084fc; }
+.seg.rest    { --seg-color: #94a3b8; }
 .seg.cooldown{ --seg-color: #38bdf8; }
 
 .seg-track {

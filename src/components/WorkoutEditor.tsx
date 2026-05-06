@@ -47,7 +47,7 @@ function newExercise(type: ExerciseType): Exercise {
     case 'fastslow':
       return { id, type, fastDuration: 60, slowDuration: 90, repeats: 6 };
     case 'taichi':
-      return { id, type, name: 'Move', sets: 8, moveDuration: 6 };
+      return { id, type, name: 'Move', sets: 8, moveDuration: 6, restDuration: 5 };
     case 'cooldown':
       return { id, type, duration: 180 };
   }
@@ -253,10 +253,18 @@ function SortableExerciseCard({
               label="Move duration"
               value={exercise.moveDuration}
               min={1}
+              secondsOnly
               onChange={(v) => onChange({ moveDuration: v } as Partial<Exercise>)}
             />
+            <DurationInput
+              label="Rest between sets"
+              value={exercise.restDuration ?? 0}
+              min={0}
+              secondsOnly
+              onChange={(v) => onChange({ restDuration: v } as Partial<Exercise>)}
+            />
+            <Readout label="Total" value={formatDuration(exerciseTotalSeconds(exercise))} />
           </div>
-          <Readout label="Total" value={formatDuration(exerciseTotalSeconds(exercise))} />
         </div>
       )}
     </div>

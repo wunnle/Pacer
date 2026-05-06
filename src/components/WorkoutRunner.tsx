@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft,
+  Coffee,
   Mic,
   MicOff,
   Pause,
@@ -33,6 +34,7 @@ type Phase =
   | { kind: 'fast'; total: number; rep: number; ofRepeats: number }
   | { kind: 'slow'; total: number; rep: number; ofRepeats: number }
   | { kind: 'taichi'; label: string; total: number; setIndex: number; ofSets: number }
+  | { kind: 'rest'; total: number; setIndex: number; ofSets: number; nextLabel: string }
   | { kind: 'cooldown'; total: number };
 
 interface PlanItem {
@@ -62,12 +64,21 @@ function buildPlan(workout: Workout): PlanItem[] {
         });
       }
     } else if (ex.type === 'taichi') {
+      const label = ex.name || 'Tai chi';
+      const restDur = ex.restDuration ?? 0;
       for (let s = 0; s < ex.sets; s++) {
         out.push({
-          phase: { kind: 'taichi', label: ex.name || 'Tai chi', total: ex.moveDuration, setIndex: s + 1, ofSets: ex.sets },
+          phase: { kind: 'taichi', label, total: ex.moveDuration, setIndex: s + 1, ofSets: ex.sets },
           exerciseIndex: exIdx,
           exercise: ex,
         });
+        if (s < ex.sets - 1 && restDur > 0) {
+          out.push({
+            phase: { kind: 'rest', total: restDur, setIndex: s + 1, ofSets: ex.sets, nextLabel: label },
+            exerciseIndex: exIdx,
+            exercise: ex,
+          });
+        }
       }
     }
   });
@@ -147,19 +158,28 @@ export function WorkoutRunner({ workout, autoStart = false, onExit }: Props) {
         speak('Workout complete');
       } else {
         const nextItem = plan[nextIdx];
-        if (current.phase.kind === 'taichi' && nextItem.phase.kind === 'taichi') {
+        const c = current.phase.kind;
+        const n = nextItem.phase.kind;
+
+        if (c === 'taichi' && n === 'rest') {
+          // Set finished, entering rest.
+          setDoneSound();
+        } else if (c === 'rest' && n === 'taichi') {
+          // Rest finished, new set starting.
+          setStartSound();
+        } else if (c === 'taichi' && n === 'taichi') {
+          // Back-to-back sets (no rest configured).
           setDoneSound();
           setTimeout(setStartSound, 260);
-        } else if (current.phase.kind === 'taichi') {
-          // Last set of a tai chi block transitioning into a different
-          // exercise — close out the set, then run the regular handoff.
+        } else if (c === 'taichi') {
+          // Last set transitioning into a different exercise.
           setDoneSound();
           setTimeout(() => {
             beepTransition();
             vibrate(HAPTIC_TRANSITION);
             announce(nextItem.phase);
           }, 260);
-        } else if (nextItem.phase.kind === 'taichi') {
+        } else if (n === 'taichi') {
           // Entering a tai chi block from a different exercise.
           beepTransition();
           vibrate(HAPTIC_TRANSITION);
@@ -316,6 +336,7 @@ export function WorkoutRunner({ workout, autoStart = false, onExit }: Props) {
         <div className="phase-title">
           {current.phase.kind === 'fast' && <Rabbit size={26} aria-hidden />}
           {current.phase.kind === 'slow' && <Turtle size={26} aria-hidden />}
+          {current.phase.kind === 'rest' && <Coffee size={26} aria-hidden />}
           <span>{phaseHeadline(current.phase)}</span>
         </div>
 
@@ -457,6 +478,7 @@ function phaseLabel(p: Phase): string {
     case 'fast': return `Fast · rep ${p.rep}/${p.ofRepeats}`;
     case 'slow': return `Slow · rep ${p.rep}/${p.ofRepeats}`;
     case 'taichi': return `Tai chi · set ${p.setIndex}/${p.ofSets}`;
+    case 'rest': return `Rest · before set ${p.setIndex + 1}/${p.ofSets}`;
   }
 }
 
@@ -467,6 +489,7 @@ function phaseHeadline(p: Phase): string {
     case 'fast': return 'Walk fast';
     case 'slow': return 'Walk slow';
     case 'taichi': return p.label;
+    case 'rest': return 'Rest';
   }
 }
 
@@ -477,5 +500,6 @@ function announce(p: Phase): void {
     case 'fast': speak('Fast'); return;
     case 'slow': speak('Slow'); return;
     case 'taichi': return;
+    case 'rest': return;
   }
 }

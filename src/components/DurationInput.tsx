@@ -5,16 +5,19 @@ interface Props {
   value: number;
   min?: number;
   step?: number;
+  secondsOnly?: boolean;
   onChange: (seconds: number) => void;
 }
 
-function smartStep(value: number): number {
+function smartStep(value: number, secondsOnly: boolean): number {
+  if (secondsOnly) return value < 30 ? 1 : 5;
   if (value < 60) return 1;
   if (value < 300) return 15;
   return 30;
 }
 
-function formatDisplay(sec: number): string {
+function formatDisplay(sec: number, secondsOnly: boolean): string {
+  if (secondsOnly) return `${sec}s`;
   const m = Math.floor(sec / 60);
   const s = sec % 60;
   if (m === 0) return `${s}s`;
@@ -22,14 +25,14 @@ function formatDisplay(sec: number): string {
   return `${m}m ${s}s`;
 }
 
-export function DurationInput({ label, value, min = 0, step, onChange }: Props) {
+export function DurationInput({ label, value, min = 0, step, secondsOnly = false, onChange }: Props) {
   const safe = Math.max(min, Math.floor(value || 0));
-  const stepDown = step ?? smartStep(safe);
+  const stepDown = step ?? smartStep(safe, secondsOnly);
   // Stepping up from "just under a threshold" should snap into the
   // bigger step (e.g., 59s + → 1m 14s feels weird; 59s + → 60s feels
-  // right). Using the *current* value's step both ways accomplishes
-  // this naturally because thresholds align with where step changes.
-  const stepUp = step ?? smartStep(safe + 1);
+  // right). Using the *next* value's step accomplishes this naturally
+  // because thresholds align with where step changes.
+  const stepUp = step ?? smartStep(safe + 1, secondsOnly);
 
   const adjust = (delta: number) => {
     const next = Math.max(min, safe + delta);
@@ -50,7 +53,7 @@ export function DurationInput({ label, value, min = 0, step, onChange }: Props) 
           <Minus size={18} />
         </button>
         <div className="duration-value" aria-live="polite">
-          {formatDisplay(safe)}
+          {formatDisplay(safe, secondsOnly)}
         </div>
         <button
           type="button"
