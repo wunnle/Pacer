@@ -68,9 +68,15 @@ export function beepFinish(): void {
   setTimeout(() => tone(784, 240, 'triangle'), 320);
 }
 
-// A single soft click — used for taichi set start/end markers.
-export function clickSound(): void {
-  tone(1000, 50, 'sine', 0.16);
+// Distinct cues for tai chi set boundaries: a low, soft "done" tone
+// and a higher, brighter "start" tone. At a set→set transition both
+// play in sequence with a short gap so you hear "set ended → new set".
+export function setDoneSound(): void {
+  tone(440, 110, 'sine', 0.16);
+}
+
+export function setStartSound(): void {
+  tone(880, 90, 'triangle', 0.16);
 }
 
 // ---- Voice ----

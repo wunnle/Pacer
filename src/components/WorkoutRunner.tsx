@@ -20,7 +20,8 @@ import {
   beepFinish,
   beepStart,
   beepTransition,
-  clickSound,
+  setDoneSound,
+  setStartSound,
   speak,
   unlockAudio,
 } from '../lib/audio';
@@ -137,7 +138,7 @@ export function WorkoutRunner({ workout, onExit }: Props) {
     if (elapsedMs >= phaseTotalMs && phaseTotalMs > 0) {
       const nextIdx = stepIdx + 1;
       if (nextIdx >= plan.length) {
-        if (current.phase.kind === 'taichi') clickSound();
+        if (current.phase.kind === 'taichi') setDoneSound();
         setRunning(false);
         setDone(true);
         beepFinish();
@@ -146,7 +147,22 @@ export function WorkoutRunner({ workout, onExit }: Props) {
       } else {
         const nextItem = plan[nextIdx];
         if (current.phase.kind === 'taichi' && nextItem.phase.kind === 'taichi') {
-          clickSound();
+          setDoneSound();
+          setTimeout(setStartSound, 260);
+        } else if (current.phase.kind === 'taichi') {
+          // Last set of a tai chi block transitioning into a different
+          // exercise — close out the set, then run the regular handoff.
+          setDoneSound();
+          setTimeout(() => {
+            beepTransition();
+            vibrate(HAPTIC_TRANSITION);
+            announce(nextItem.phase);
+          }, 260);
+        } else if (nextItem.phase.kind === 'taichi') {
+          // Entering a tai chi block from a different exercise.
+          beepTransition();
+          vibrate(HAPTIC_TRANSITION);
+          setTimeout(setStartSound, 260);
         } else {
           beepTransition();
           vibrate(HAPTIC_TRANSITION);
@@ -202,7 +218,7 @@ export function WorkoutRunner({ workout, onExit }: Props) {
     if (!current) return;
     if (stepIdx === 0 && elapsedMs === 0) {
       if (plan[0].phase.kind === 'taichi') {
-        clickSound();
+        setStartSound();
       } else {
         beepStart();
         vibrate([40, 40, 40]);
