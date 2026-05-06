@@ -256,117 +256,69 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; marg
 }
 .runner .clock {
   font-variant-numeric: tabular-nums;
-  font-size: 76px;
-  font-weight: 700;
+  font-size: 44px;
+  font-weight: 600;
   line-height: 1;
-  letter-spacing: -2px;
+  letter-spacing: -1px;
+  color: var(--text);
 }
 .runner.fast .stage { background: linear-gradient(180deg, #1f2937 0%, #0b3a32 100%); border-color: #155e58; }
-.runner.fast .progress-ring .bar { stroke: #34d399; }
 .runner.slow .stage { background: linear-gradient(180deg, #131a26 0%, #1d2740 100%); border-color: #25324d; }
-.runner.slow .progress-ring .bar { stroke: var(--accent-2); }
 .runner.warmup .stage { background: linear-gradient(180deg, #1f1814 0%, #2b1d12 100%); border-color: #553a22; }
-.runner.warmup .progress-ring .bar { stroke: #fbbf24; }
 .runner.cooldown .stage { background: linear-gradient(180deg, #11212b 0%, #0d2a36 100%); border-color: #1a4a5c; }
-.runner.cooldown .progress-ring .bar { stroke: #38bdf8; }
 .runner.taichi .stage { background: linear-gradient(180deg, #1a1330 0%, #2a1a4d 100%); border-color: #3a2870; }
-.runner.taichi .progress-ring .bar { stroke: #c084fc; }
 
-.ring-wrap { position: relative; }
-.progress-ring { width: 220px; height: 220px; transform: rotate(-90deg); }
-.progress-ring circle { fill: none; stroke-width: 12; }
-.progress-ring .track { stroke: rgba(255,255,255,0.08); }
-.progress-ring .bar { stroke: var(--accent); stroke-linecap: round; transition: stroke-dashoffset 0.2s linear; }
-.ring-center {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Fast/slow timeline integrated in stage */
-.fs-timeline {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: center;
-}
-.fs-bar {
+/* Unified segment bar — used by every exercise type. Each segment is
+   one logical unit (warm-up = 1, fast/slow = 2 per rep, taichi = 1
+   per set, cool-down = 1). The active segment fills bottom-up via
+   GPU-composited scaleY so it stays smooth on any phase length. */
+.seg-bar {
   width: 100%;
   display: flex;
   align-items: stretch;
-  height: 44px;
-  border-radius: 12px;
+  height: 140px;
+  border-radius: 14px;
   overflow: hidden;
-  background: rgba(255,255,255,0.04);
-  gap: 3px;
-  padding: 3px;
+  background: rgba(255, 255, 255, 0.03);
+  gap: 4px;
+  padding: 4px;
 }
-.fs-seg {
+.seg {
   height: 100%;
-  border-radius: 6px;
+  min-width: 6px;
+  border-radius: 8px;
   position: relative;
   overflow: hidden;
-  background: rgba(255,255,255,0.06);
-  transition: opacity 0.25s ease;
+  background: rgba(255, 255, 255, 0.05);
 }
-.fs-seg.fast { --seg-color: #34d399; }
-.fs-seg.slow { --seg-color: #38bdf8; }
+.seg.warmup  { --seg-color: #fbbf24; }
+.seg.fast    { --seg-color: #34d399; }
+.seg.slow    { --seg-color: #38bdf8; }
+.seg.taichi  { --seg-color: #c084fc; }
+.seg.cooldown{ --seg-color: #38bdf8; }
 
-.fs-seg-track {
+.seg-track {
   position: absolute;
   inset: 0;
   background: var(--seg-color);
   opacity: 0;
-  transition: opacity 0.25s ease;
+  transition: opacity 0.2s ease;
+  border-radius: inherit;
 }
-.fs-seg.past .fs-seg-track { opacity: 0.85; }
-.fs-seg.future .fs-seg-track { opacity: 0; }
-.fs-seg.current { box-shadow: 0 0 0 1px rgba(255,255,255,0.3) inset; }
-.fs-seg.current .fs-seg-track { opacity: 0.18; }
+.seg.past .seg-track { opacity: 0.85; }
+.seg.current .seg-track { opacity: 0.18; }
+.seg.current { box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.35) inset; }
 
-/* Vertical fill — current segment fills bottom-up. */
-.fs-seg-fill {
+.seg-fill {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background: var(--seg-color);
-  border-radius: 0 0 6px 6px;
-  transition: height 0.2s linear;
+  transform: scaleY(0);
+  transform-origin: bottom center;
+  border-radius: inherit;
+  will-change: transform;
 }
-.fs-seg.current.fast .fs-seg-fill { box-shadow: 0 0 12px rgba(52, 211, 153, 0.5); }
-.fs-seg.current.slow .fs-seg-fill { box-shadow: 0 0 12px rgba(56, 189, 248, 0.5); }
-
-.fs-meta {
-  color: var(--muted);
-  font-size: 13px;
-  letter-spacing: 0.5px;
-}
-
-.taichi-sets {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-}
-.dots { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; max-width: 100%; }
-.dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.15);
-  transition: background 0.2s ease, transform 0.2s ease;
-}
-.dot.done { background: #c084fc; }
-.dot.active {
-  background: #c084fc;
-  transform: scale(1.4);
-  box-shadow: 0 0 12px rgba(192, 132, 252, 0.6);
-}
+.seg.current .seg-fill { box-shadow: 0 0 18px color-mix(in srgb, var(--seg-color) 45%, transparent); }
 
 /* Footer strip combining up-next + workout progress */
 .footer-strip {

@@ -94,6 +94,7 @@ export function WorkoutRunner({ workout, onExit }: Props) {
   const next = plan[stepIdx + 1];
   const phaseTotalMs = current ? current.phase.total * 1000 : 0;
   const remainingMs = Math.max(0, phaseTotalMs - elapsedMs);
+  const fraction = phaseTotalMs > 0 ? Math.min(1, Math.max(0, elapsedMs / phaseTotalMs)) : 0;
 
   const totalSec = useMemo(() => plan.reduce((s, p) => s + p.phase.total, 0), [plan]);
   const elapsedAcrossSec = useMemo(() => {
@@ -101,6 +102,17 @@ export function WorkoutRunner({ workout, onExit }: Props) {
     for (let i = 0; i < stepIdx; i++) s += plan[i].phase.total;
     return s + elapsedMs / 1000;
   }, [plan, stepIdx, elapsedMs]);
+
+  // All plan items belonging to the current exercise — these become the
+  // segments shown in the unified bar.
+  const exerciseSegments = useMemo(() => {
+    if (!current) return [];
+    return plan.filter((p) => p.exerciseIndex === current.exerciseIndex);
+  }, [plan, current]);
+  const currentSegmentIdx = useMemo(() => {
+    if (!current) return 0;
+    return exerciseSegments.indexOf(current);
+  }, [exerciseSegments, current]);
 
   useEffect(() => {
     if (!running) return;
@@ -123,8 +135,6 @@ export function WorkoutRunner({ workout, onExit }: Props) {
     if (elapsedMs >= phaseTotalMs && phaseTotalMs > 0) {
       const nextIdx = stepIdx + 1;
       if (nextIdx >= plan.length) {
-        // Final segment finished. If last phase is a taichi set, give it a clean
-        // closing click before the finish fanfare; otherwise finish directly.
         if (current.phase.kind === 'taichi') clickSound();
         setRunning(false);
         setDone(true);
@@ -133,8 +143,6 @@ export function WorkoutRunner({ workout, onExit }: Props) {
         speak('Workout complete');
       } else {
         const nextItem = plan[nextIdx];
-        // For taichi → taichi (next set), use a single soft click. For other
-        // transitions, use the more emphatic two-tone transition beep.
         if (current.phase.kind === 'taichi' && nextItem.phase.kind === 'taichi') {
           clickSound();
         } else {
@@ -153,7 +161,6 @@ export function WorkoutRunner({ workout, onExit }: Props) {
 
   useEffect(() => {
     if (!running || !current) return;
-    // Countdown beeps in last 3s — only for non-taichi phases.
     if (current.phase.kind === 'taichi') return;
     const remainingSec = Math.ceil((phaseTotalMs - elapsedMs) / 1000);
     if (remainingSec > 0 && remainingSec <= 3 && remainingSec !== lastCountdownSecRef.current) {
@@ -192,7 +199,6 @@ export function WorkoutRunner({ workout, onExit }: Props) {
     }
     if (!current) return;
     if (stepIdx === 0 && elapsedMs === 0) {
-      // First start: click for taichi, full fanfare otherwise.
       if (plan[0].phase.kind === 'taichi') {
         clickSound();
       } else {
@@ -277,12 +283,16 @@ export function WorkoutRunner({ workout, onExit }: Props) {
         </div>
       </header>
 
-      <Stage
-        item={current}
-        remainingMs={remainingMs}
-        totalMs={phaseTotalMs}
-        done={done}
-      />
+      <div className="stage">
+        <div className="phase-label">{phaseLabel(current.phase)}</div>
+        <div className="phase-title">{phaseHeadline(current.phase)}</div>
+        <div className="clock">{done ? 'Done' : formatClock(remainingMs / 1000)}</div>
+        <SegmentBar
+          segments={exerciseSegments}
+          currentIdx={currentSegmentIdx}
+          fraction={fraction}
+        />
+      </div>
 
       <div className="footer-strip">
         {next && !done ? (
@@ -332,126 +342,33 @@ export function WorkoutRunner({ workout, onExit }: Props) {
   );
 }
 
-function Stage({
-  item,
-  remainingMs,
-  totalMs,
-  done,
-}: {
-  item: PlanItem;
-  remainingMs: number;
-  totalMs: number;
-  done: boolean;
-}) {
-  const { phase, exercise } = item;
-  const fraction = totalMs > 0 ? Math.min(1, Math.max(0, 1 - remainingMs / totalMs)) : 0;
-  const r = 100;
-  const c = 2 * Math.PI * r;
-
-  return (
-    <div className="stage">
-      <div className="phase-label">{phaseLabel(phase)}</div>
-      <div className="phase-title">{phaseHeadline(phase)}</div>
-
-      <div className="ring-wrap">
-        <svg className="progress-ring" viewBox="0 0 220 220">
-          <circle className="track" cx="110" cy="110" r={r} />
-          <circle
-            className="bar"
-            cx="110"
-            cy="110"
-            r={r}
-            strokeDasharray={c}
-            strokeDashoffset={c * (1 - fraction)}
-          />
-        </svg>
-        <div className="ring-center">
-          <div className="clock">{done ? 'Done' : formatClock(remainingMs / 1000)}</div>
-        </div>
-      </div>
-
-      {(phase.kind === 'fast' || phase.kind === 'slow') && exercise.type === 'fastslow' && (
-        <FastSlowTimeline
-          fastDuration={exercise.fastDuration}
-          slowDuration={exercise.slowDuration}
-          repeats={exercise.repeats}
-          currentRep={phase.rep}
-          currentIsFast={phase.kind === 'fast'}
-          fraction={fraction}
-        />
-      )}
-
-      {phase.kind === 'taichi' && (
-        <TaichiSets total={phase.ofSets} current={phase.setIndex} />
-      )}
-    </div>
-  );
-}
-
-function FastSlowTimeline({
-  fastDuration,
-  slowDuration,
-  repeats,
-  currentRep,
-  currentIsFast,
+function SegmentBar({
+  segments,
+  currentIdx,
   fraction,
 }: {
-  fastDuration: number;
-  slowDuration: number;
-  repeats: number;
-  currentRep: number;
-  currentIsFast: boolean;
+  segments: PlanItem[];
+  currentIdx: number;
   fraction: number;
 }) {
-  const segments: { kind: 'fast' | 'slow'; duration: number; status: 'past' | 'current' | 'future' }[] = [];
-  for (let r = 1; r <= repeats; r++) {
-    for (const kind of ['fast', 'slow'] as const) {
-      let status: 'past' | 'current' | 'future' = 'future';
-      if (r < currentRep) status = 'past';
-      else if (r === currentRep) {
-        if (kind === 'fast') status = currentIsFast ? 'current' : 'past';
-        else status = currentIsFast ? 'future' : 'current';
-      }
-      segments.push({ kind, duration: kind === 'fast' ? fastDuration : slowDuration, status });
-    }
-  }
-
+  if (segments.length === 0) return null;
   return (
-    <div className="fs-timeline">
-      <div className="fs-bar">
-        {segments.map((s, i) => (
+    <div className="seg-bar" role="progressbar" aria-valuenow={currentIdx + fraction} aria-valuemin={0} aria-valuemax={segments.length}>
+      {segments.map((s, i) => {
+        const status = i < currentIdx ? 'past' : i === currentIdx ? 'current' : 'future';
+        const kind = s.phase.kind;
+        const scale = status === 'past' ? 1 : status === 'current' ? fraction : 0;
+        return (
           <div
             key={i}
-            className={`fs-seg ${s.kind} ${s.status}`}
-            style={{ flex: `${s.duration} 0 0` }}
+            className={`seg ${kind} ${status}`}
+            style={{ flex: `${s.phase.total} 0 0` }}
           >
-            <div className="fs-seg-track" />
-            {s.status === 'current' && (
-              <div className="fs-seg-fill" style={{ height: `${fraction * 100}%` }} />
-            )}
+            <div className="seg-track" />
+            <div className="seg-fill" style={{ transform: `scaleY(${scale})` }} />
           </div>
-        ))}
-      </div>
-      <div className="fs-meta">
-        Rep {currentRep} of {repeats}
-      </div>
-    </div>
-  );
-}
-
-function TaichiSets({ total, current }: { total: number; current: number }) {
-  const dots = Array.from({ length: total }, (_, i) => i + 1);
-  return (
-    <div className="taichi-sets">
-      <div className="dots">
-        {dots.map((n) => (
-          <div
-            key={n}
-            className={`dot ${n < current ? 'done' : n === current ? 'active' : ''}`}
-          />
-        ))}
-      </div>
-      <div className="fs-meta">Set {current} of {total}</div>
+        );
+      })}
     </div>
   );
 }
@@ -482,6 +399,6 @@ function announce(p: Phase): void {
     case 'cooldown': speak('Cool down walk'); return;
     case 'fast': speak('Fast'); return;
     case 'slow': speak('Slow'); return;
-    case 'taichi': /* taichi never uses voice; clicks only */ return;
+    case 'taichi': return;
   }
 }
