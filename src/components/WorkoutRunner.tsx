@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft,
+  Mic,
+  MicOff,
   Pause,
   Play,
   RotateCcw,
@@ -81,6 +83,7 @@ export function WorkoutRunner({ workout, onExit }: Props) {
   const [running, setRunning] = useState(false);
   const [done, setDone] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(() => loadSettings().voiceEnabled);
+  const [sfxEnabled, setSfxEnabled] = useState(() => loadSettings().sfxEnabled);
 
   const startedAtRef = useRef<number | null>(null);
   const baseElapsedRef = useRef(0);
@@ -226,6 +229,11 @@ export function WorkoutRunner({ workout, onExit }: Props) {
     setVoiceEnabled(v);
     saveSettings({ voiceEnabled: v });
   };
+  const toggleSfx = () => {
+    const v = !sfxEnabled;
+    setSfxEnabled(v);
+    saveSettings({ sfxEnabled: v });
+  };
 
   if (!current) {
     return (
@@ -249,14 +257,24 @@ export function WorkoutRunner({ workout, onExit }: Props) {
           <ArrowLeft size={20} />
         </button>
         <div className="subtitle">{workout.name}</div>
-        <button
-          className="ghost icon"
-          onClick={toggleVoice}
-          aria-label={voiceEnabled ? 'Disable voice' : 'Enable voice'}
-          title={voiceEnabled ? 'Voice on' : 'Voice off'}
-        >
-          {voiceEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
-        </button>
+        <div className="row" style={{ gap: 4 }}>
+          <button
+            className="ghost icon"
+            onClick={toggleSfx}
+            aria-label={sfxEnabled ? 'Disable sounds' : 'Enable sounds'}
+            title={sfxEnabled ? 'Sounds on' : 'Sounds off'}
+          >
+            {sfxEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
+          </button>
+          <button
+            className="ghost icon"
+            onClick={toggleVoice}
+            aria-label={voiceEnabled ? 'Disable voice' : 'Enable voice'}
+            title={voiceEnabled ? 'Voice on' : 'Voice off'}
+          >
+            {voiceEnabled ? <Mic size={18} /> : <MicOff size={18} />}
+          </button>
+        </div>
       </header>
 
       <Stage
@@ -407,8 +425,9 @@ function FastSlowTimeline({
             className={`fs-seg ${s.kind} ${s.status}`}
             style={{ flex: `${s.duration} 0 0` }}
           >
+            <div className="fs-seg-track" />
             {s.status === 'current' && (
-              <div className="fs-seg-fill" style={{ width: `${fraction * 100}%` }} />
+              <div className="fs-seg-fill" style={{ height: `${fraction * 100}%` }} />
             )}
           </div>
         ))}

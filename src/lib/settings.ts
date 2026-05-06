@@ -2,10 +2,12 @@ const KEY = 'pacer.settings.v1';
 
 export interface Settings {
   voiceEnabled: boolean;
+  sfxEnabled: boolean;
 }
 
 const defaults: Settings = {
   voiceEnabled: true,
+  sfxEnabled: true,
 };
 
 export function loadSettings(): Settings {

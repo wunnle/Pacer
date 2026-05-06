@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pencil, Play, Plus, Trash2, Volume2, VolumeX } from 'lucide-react';
+import { Mic, MicOff, Pencil, Play, Plus, Trash2, Volume2, VolumeX } from 'lucide-react';
 import type { Workout } from '../types';
 import { workoutTotalSeconds } from '../types';
 import { deleteWorkout } from '../lib/storage';
@@ -16,11 +16,17 @@ interface Props {
 
 export function Home({ workouts, onChange, onNew, onEdit, onStart }: Props) {
   const [voiceEnabled, setVoiceEnabled] = useState(() => loadSettings().voiceEnabled);
+  const [sfxEnabled, setSfxEnabled] = useState(() => loadSettings().sfxEnabled);
 
   const toggleVoice = () => {
     const next = !voiceEnabled;
     setVoiceEnabled(next);
     saveSettings({ voiceEnabled: next });
+  };
+  const toggleSfx = () => {
+    const next = !sfxEnabled;
+    setSfxEnabled(next);
+    saveSettings({ sfxEnabled: next });
   };
 
   const handleDelete = (id: string, name: string) => {
@@ -35,16 +41,24 @@ export function Home({ workouts, onChange, onNew, onEdit, onStart }: Props) {
           <h1>Pacer</h1>
           <div className="subtitle">Real-time workout pacing</div>
         </div>
-        <div className="row" style={{ gap: 8 }}>
+        <div className="row" style={{ gap: 4 }}>
+          <button
+            className="ghost icon"
+            onClick={toggleSfx}
+            aria-label={sfxEnabled ? 'Disable sounds' : 'Enable sounds'}
+            title={sfxEnabled ? 'Sounds on' : 'Sounds off'}
+          >
+            {sfxEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+          </button>
           <button
             className="ghost icon"
             onClick={toggleVoice}
             aria-label={voiceEnabled ? 'Disable voice' : 'Enable voice'}
             title={voiceEnabled ? 'Voice on' : 'Voice off'}
           >
-            {voiceEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+            {voiceEnabled ? <Mic size={20} /> : <MicOff size={20} />}
           </button>
-          <button className="primary" onClick={onNew}>
+          <button className="primary" onClick={onNew} style={{ marginLeft: 4 }}>
             <Plus size={16} />
             <span>New</span>
           </button>

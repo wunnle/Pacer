@@ -26,6 +26,7 @@ export function unlockAudio(): void {
 }
 
 function tone(freq: number, durationMs: number, type: OscillatorType = 'sine', gain = 0.18): void {
+  if (!loadSettings().sfxEnabled) return;
   const c = getCtx();
   if (!c) return;
   const osc = c.createOscillator();
