@@ -118,14 +118,17 @@ export function WorkoutRunner({ workout, autoStart = false, onExit }: Props) {
     return s + elapsedMs / 1000;
   }, [plan, stepIdx, elapsedMs]);
 
-  // All plan items belonging to the current exercise — these become the
-  // segments shown in the unified bar.
+  // Plan items shown in the segment bar. Rest periods are intentionally
+  // excluded — the bar represents the work segments only, so the bar
+  // doesn't visibly stutter every other slot during a tai chi block.
   const exerciseSegments = useMemo(() => {
     if (!current) return [];
-    return plan.filter((p) => p.exerciseIndex === current.exerciseIndex);
+    return plan.filter(
+      (p) => p.exerciseIndex === current.exerciseIndex && p.phase.kind !== 'rest',
+    );
   }, [plan, current]);
   const currentSegmentIdx = useMemo(() => {
-    if (!current) return 0;
+    if (!current || current.phase.kind === 'rest') return -1;
     return exerciseSegments.indexOf(current);
   }, [exerciseSegments, current]);
 
@@ -340,7 +343,11 @@ export function WorkoutRunner({ workout, autoStart = false, onExit }: Props) {
           <span>{phaseHeadline(current.phase)}</span>
         </div>
 
-        {exerciseSegments.length <= 1 ? (
+        {current.phase.kind === 'rest' ? (
+          // Rest: deliberately calm. No timer, no bar — just the title
+          // and the implicit "set N coming up" from the phase label.
+          null
+        ) : exerciseSegments.length <= 1 ? (
           <ProgressRing
             phaseKind={current.phase.kind}
             fraction={fraction}
