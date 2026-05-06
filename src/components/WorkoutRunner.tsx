@@ -5,8 +5,10 @@ import {
   MicOff,
   Pause,
   Play,
+  Rabbit,
   RotateCcw,
   SkipForward,
+  Turtle,
   Volume2,
   VolumeX,
 } from 'lucide-react';
@@ -285,13 +287,29 @@ export function WorkoutRunner({ workout, onExit }: Props) {
 
       <div className="stage">
         <div className="phase-label">{phaseLabel(current.phase)}</div>
-        <div className="phase-title">{phaseHeadline(current.phase)}</div>
-        <div className="clock">{done ? 'Done' : formatClock(remainingMs / 1000)}</div>
-        <SegmentBar
-          segments={exerciseSegments}
-          currentIdx={currentSegmentIdx}
-          fraction={fraction}
-        />
+        <div className="phase-title">
+          {current.phase.kind === 'fast' && <Rabbit size={26} aria-hidden />}
+          {current.phase.kind === 'slow' && <Turtle size={26} aria-hidden />}
+          <span>{phaseHeadline(current.phase)}</span>
+        </div>
+
+        {exerciseSegments.length <= 1 ? (
+          <ProgressRing
+            phaseKind={current.phase.kind}
+            fraction={fraction}
+            remainingMs={remainingMs}
+            done={done}
+          />
+        ) : (
+          <>
+            <div className="clock">{done ? 'Done' : formatClock(remainingMs / 1000)}</div>
+            <SegmentBar
+              segments={exerciseSegments}
+              currentIdx={currentSegmentIdx}
+              fraction={fraction}
+            />
+          </>
+        )}
       </div>
 
       <div className="footer-strip">
@@ -337,6 +355,39 @@ export function WorkoutRunner({ workout, onExit }: Props) {
           <SkipForward size={18} />
           <span>Skip</span>
         </button>
+      </div>
+    </div>
+  );
+}
+
+function ProgressRing({
+  phaseKind,
+  fraction,
+  remainingMs,
+  done,
+}: {
+  phaseKind: Phase['kind'];
+  fraction: number;
+  remainingMs: number;
+  done: boolean;
+}) {
+  const r = 100;
+  const c = 2 * Math.PI * r;
+  return (
+    <div className="ring-wrap">
+      <svg className={`progress-ring ${phaseKind}`} viewBox="0 0 220 220">
+        <circle className="track" cx="110" cy="110" r={r} />
+        <circle
+          className="bar"
+          cx="110"
+          cy="110"
+          r={r}
+          strokeDasharray={c}
+          strokeDashoffset={c * (1 - fraction)}
+        />
+      </svg>
+      <div className="ring-center">
+        <div className="clock">{done ? 'Done' : formatClock(remainingMs / 1000)}</div>
       </div>
     </div>
   );
