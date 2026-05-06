@@ -495,11 +495,12 @@ function phaseHeadline(p: Phase): string {
 
 function announce(p: Phase): void {
   switch (p.kind) {
-    case 'warmup': speak('Warm up walk'); return;
-    case 'cooldown': speak('Cool down walk'); return;
     case 'fast': speak('Fast'); return;
     case 'slow': speak('Slow'); return;
-    case 'taichi': return;
-    case 'rest': return;
+    case 'warmup':
+    case 'cooldown':
+    case 'taichi':
+    case 'rest':
+      return;
   }
 }
