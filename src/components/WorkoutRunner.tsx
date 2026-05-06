@@ -353,12 +353,19 @@ export function WorkoutRunner({ workout, autoStart = false, onExit }: Props) {
 
         {current.phase.kind === 'rest' ? (
           // Rest: keep the segment bar visible (so progress is clear)
-          // but skip the timer. The next set lights up as queued.
-          <SegmentBar
-            segments={exerciseSegments}
-            currentIdx={currentSegmentIdx}
-            fraction={0}
-          />
+          // but visually hide the timer. We still render a clock-sized
+          // placeholder so the layout doesn't jump when entering or
+          // leaving rest.
+          <>
+            <div className="clock" aria-hidden style={{ visibility: 'hidden' }}>
+              0:00
+            </div>
+            <SegmentBar
+              segments={exerciseSegments}
+              currentIdx={currentSegmentIdx}
+              fraction={0}
+            />
+          </>
         ) : exerciseSegments.length <= 1 ? (
           <ProgressRing
             phaseKind={current.phase.kind}
