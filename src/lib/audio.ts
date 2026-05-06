@@ -1,6 +1,7 @@
 import { loadSettings } from './settings';
 
 let ctx: AudioContext | null = null;
+let primed = false;
 
 function getCtx(): AudioContext | null {
   if (typeof window === 'undefined') return null;
@@ -14,8 +15,25 @@ function getCtx(): AudioContext | null {
 }
 
 export function unlockAudio(): void {
-  getCtx();
-  // Pre-warm speech synthesis with a silent utterance so the first real one isn't laggy.
+  const c = getCtx();
+  if (!c) return;
+  // iOS Safari refuses to fully initialize the audio output until
+  // *something* plays from a user gesture. Without this, the very
+  // first tone scheduled in the same call stack as the start tap can
+  // be dropped before ctx.resume() resolves. Playing a silent
+  // 1-sample buffer is the canonical workaround.
+  if (!primed) {
+    try {
+      const buffer = c.createBuffer(1, 1, 22050);
+      const src = c.createBufferSource();
+      src.buffer = buffer;
+      src.connect(c.destination);
+      src.start(0);
+      primed = true;
+    } catch {
+      /* ignore */
+    }
+  }
   if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
     try {
       window.speechSynthesis.getVoices();
@@ -72,11 +90,11 @@ export function beepFinish(): void {
 // and a higher, brighter "start" tone. At a set→set transition both
 // play in sequence with a short gap so you hear "set ended → new set".
 export function setDoneSound(): void {
-  tone(440, 110, 'sine', 0.16);
+  tone(440, 130, 'sine', 0.22);
 }
 
 export function setStartSound(): void {
-  tone(880, 90, 'triangle', 0.16);
+  tone(880, 110, 'triangle', 0.22);
 }
 
 // ---- Voice ----
