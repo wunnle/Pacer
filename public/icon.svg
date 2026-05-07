@@ -1,5 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="96" fill="#0b0f17"/>
-  <circle cx="256" cy="256" r="180" fill="none" stroke="#5eead4" stroke-width="24"/>
-  <path d="M256 116 V256 L356 316" fill="none" stroke="#5eead4" stroke-width="28" stroke-linecap="round"/>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="115" fill="#131a26"/>
+  <g transform="translate(256,265) scale(2.7) translate(-91,-97)">
+    <path d="M163.369 51.2896L134.946 53.008L126.37 78.6942L154.578 86.2287L163.369 51.2896Z" fill="#7E8FA0"/>
+    <path d="M163.369 51.2896L144.772 64.9381L126.37 78.6942L154.578 86.2287L163.369 51.2896Z" fill="#657A8F"/>
+    <circle cx="79.4254" cy="95.4795" r="55.6518" transform="rotate(-19.3478 79.4254 95.4795)" fill="#7E8FA0"/>
+    <path d="M102.853 145.963C104.436 145.23 105.971 144.43 107.456 143.567C106.888 124.602 94.3229 108.691 77.1766 103.337C66.1291 98.1468 58.4792 86.9218 58.4791 73.908C58.4794 55.959 73.03 41.4084 90.9789 41.4082C91.6047 41.4082 92.2271 41.4277 92.8442 41.4626C110.404 45.8421 125.49 58.69 131.934 77.0419C141.516 104.33 128.575 134.063 102.853 145.963Z" fill="#C4CED6"/>
+    <circle cx="91.5593" cy="72.4882" r="7.4325" transform="rotate(-5.24366 91.5593 72.4882)" fill="#1E1E1E"/>
+  </g>
 </svg>
