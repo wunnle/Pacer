@@ -162,7 +162,7 @@ button.toggle.on {
 
 .workout-card-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr 1.2fr;
+  grid-template-columns: 1fr 1fr 1.6fr;
   gap: 8px;
   padding-top: 12px;
   border-top: 1px solid var(--bg-3);
