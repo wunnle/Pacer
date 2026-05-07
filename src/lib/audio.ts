@@ -99,9 +99,16 @@ export function beepTransition(): void {
 }
 
 export function beepFinish(): void {
-  tone(523, 140, 'triangle');
-  setTimeout(() => tone(659, 140, 'triangle'), 160);
-  setTimeout(() => tone(784, 240, 'triangle'), 320);
+  // Arcade "level complete" jingle
+  const notes: [number, number, number][] = [
+    [523, 80, 0],
+    [659, 80, 90],
+    [784, 80, 180],
+    [1047, 80, 270],
+    [784, 80, 360],
+    [1047, 200, 450],
+  ];
+  notes.forEach(([freq, dur, delay]) => setTimeout(() => tone(freq, dur, 'square', 0.14), delay));
 }
 
 // Distinct cues for tai chi set boundaries: a low, soft "done" tone

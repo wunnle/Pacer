@@ -379,7 +379,7 @@ export function WorkoutRunner({ workout, autoStart = false, onExit }: Props) {
         ) : (
           <div className="footer-row">
             <div className="footer-label">Final segment</div>
-            <div className="footer-name">{done ? 'Workout complete' : phaseHeadline(current.phase)}</div>
+            <div className="footer-name">{done ? phaseHeadline(current.phase) : phaseHeadline(current.phase)}</div>
             <div className="footer-time" />
           </div>
         )}

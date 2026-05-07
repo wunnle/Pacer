@@ -1,24 +1,10 @@
 import { useState } from 'react';
-import { Pencil, Play, Plus, Snowflake, Sparkles, Sun, Trash2, Volume2, VolumeX, Waves } from 'lucide-react';
-import type { ExerciseType, Workout } from '../types';
+import { Pencil, Play, Plus, Trash2, Volume2, VolumeX } from 'lucide-react';
+import type { Workout } from '../types';
 import { workoutTotalSeconds } from '../types';
 import { deleteWorkout } from '../lib/storage';
 import { formatDuration } from '../lib/format';
 import { loadSettings, saveSettings } from '../lib/settings';
-
-const exerciseIconMap: Record<ExerciseType, typeof Sun> = {
-  warmup: Sun,
-  fastslow: Waves,
-  taichi: Sparkles,
-  cooldown: Snowflake,
-};
-
-const exerciseColorMap: Record<ExerciseType, string> = {
-  warmup: '#facc15',
-  fastslow: '#34d399',
-  taichi: '#c084fc',
-  cooldown: '#38bdf8',
-};
 
 
 interface Props {
@@ -75,15 +61,8 @@ export function Home({ workouts, onChange, onNew, onEdit, onStart }: Props) {
                 <div className="name">{w.name || 'Untitled'}</div>
                 <div className="meta">{formatDuration(workoutTotalSeconds(w))}</div>
               </div>
-              <div className="workout-blocks">
-                {w.exercises.map((ex) => {
-                  const Icon = exerciseIconMap[ex.type];
-                  return (
-                    <div key={ex.id} className="workout-block" style={{ '--block-color': exerciseColorMap[ex.type] } as React.CSSProperties}>
-                      <Icon size={13} />
-                    </div>
-                  );
-                })}
+              <div className="meta" style={{ marginBottom: 14 }}>
+                {w.exercises.length} {w.exercises.length === 1 ? 'exercise' : 'exercises'}
               </div>
               <div className="workout-card-actions">
                 <button className="ghost" onClick={() => onEdit(w.id)}>

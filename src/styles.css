@@ -159,17 +159,6 @@ button.toggle.on {
 .workout-card-tall .name { font-weight: 600; font-size: 17px; }
 .workout-card-tall .meta { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
 
-.workout-blocks {
-  display: flex;
-  flex-direction: row;
-  gap: 8px;
-  margin-bottom: 14px;
-}
-.workout-block {
-  display: flex;
-  align-items: center;
-}
-.workout-block svg { color: var(--block-color); }
 
 .workout-card-actions {
   display: grid;
@@ -346,7 +335,7 @@ button.toggle.on {
 /* Progress ring — used for single-segment exercises (warm-up, cool-down)
    where a continuous radial countdown reads cleaner than a single tall bar. */
 .ring-wrap { position: relative; }
-.progress-ring { width: 240px; height: 240px; transform: rotate(-90deg); }
+.progress-ring { width: min(240px, 70vw); height: min(240px, 70vw); transform: rotate(-90deg); }
 .progress-ring circle { fill: none; stroke-width: 12; }
 .progress-ring .track { stroke: rgba(255, 255, 255, 0.08); }
 .progress-ring .bar {
@@ -375,6 +364,7 @@ button.toggle.on {
    GPU-composited scaleY so it stays smooth on any phase length. */
 .seg-bar {
   width: 100%;
+  max-width: 480px;
   display: flex;
   align-items: stretch;
   height: 140px;
