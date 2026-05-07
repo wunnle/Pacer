@@ -25,7 +25,6 @@ import {
   Sun,
   Trash2,
   Waves,
-  ArrowLeft,
 } from 'lucide-react';
 import type { Exercise, ExerciseType, Workout } from '../types';
 import { EXERCISE_LABELS, exerciseTotalSeconds } from '../types';
@@ -140,18 +139,19 @@ export function WorkoutEditor({ workout, onSaved, onCancel, onDelete }: Props) {
             );
           })}
         </div>
-      </div>
 
-      <div className="bottom-bar">
-        <button className="ghost icon" onClick={onCancel} aria-label="Back"><ArrowLeft size={18} /></button>
         {onDelete && (
-          <button className="ghost danger" onClick={() => {
+          <button className="ghost danger" style={{ width: '100%' }} onClick={() => {
             if (confirm(`Delete "${name.trim() || 'Untitled'}"?`)) onDelete();
           }}>
             <Trash2 size={16} />
-            <span>Delete</span>
+            <span>Delete workout</span>
           </button>
         )}
+      </div>
+
+      <div className="bottom-bar">
+        <button className="ghost" onClick={onCancel}>Cancel</button>
         <button className="primary" onClick={save} disabled={exercises.length === 0}>Save</button>
       </div>
     </>
