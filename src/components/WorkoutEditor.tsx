@@ -280,6 +280,7 @@ function NumField({
         inputMode="numeric"
         min={min}
         value={Number.isFinite(value) ? value : 0}
+        onFocus={(e) => e.target.select()}
         onChange={(e) => {
           const n = Number(e.target.value);
           onChange(Number.isFinite(n) ? Math.max(min, Math.floor(n)) : min);
