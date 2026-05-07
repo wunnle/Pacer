@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Pencil, Play, Plus, Snowflake, Sparkles, Sun, Trash2, Volume2, VolumeX, Waves } from 'lucide-react';
-import type { Exercise, ExerciseType, Workout } from '../types';
+import type { ExerciseType, Workout } from '../types';
 import { workoutTotalSeconds } from '../types';
 import { deleteWorkout } from '../lib/storage';
 import { formatDuration } from '../lib/format';
@@ -20,17 +20,6 @@ const exerciseColorMap: Record<ExerciseType, string> = {
   cooldown: '#38bdf8',
 };
 
-function exerciseSummary(ex: Exercise): string {
-  switch (ex.type) {
-    case 'warmup':
-    case 'cooldown':
-      return formatDuration(ex.duration);
-    case 'fastslow':
-      return `${ex.repeats}× ${formatDuration(ex.fastDuration)}/${formatDuration(ex.slowDuration)}`;
-    case 'taichi':
-      return `${ex.name} · ${ex.sets} sets`;
-  }
-}
 
 interface Props {
   workouts: Workout[];
@@ -91,8 +80,7 @@ export function Home({ workouts, onChange, onNew, onEdit, onStart }: Props) {
                   const Icon = exerciseIconMap[ex.type];
                   return (
                     <div key={ex.id} className="workout-block" style={{ '--block-color': exerciseColorMap[ex.type] } as React.CSSProperties}>
-                      <Icon size={12} />
-                      <span>{exerciseSummary(ex)}</span>
+                      <Icon size={13} />
                     </div>
                   );
                 })}

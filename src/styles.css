@@ -161,19 +161,15 @@ button.toggle.on {
 
 .workout-blocks {
   display: flex;
-  flex-direction: column;
-  gap: 5px;
+  flex-direction: row;
+  gap: 8px;
   margin-bottom: 14px;
 }
 .workout-block {
   display: flex;
   align-items: center;
-  gap: 7px;
-  font-size: 13px;
-  color: var(--muted);
 }
-.workout-block svg { color: var(--block-color); flex-shrink: 0; }
-.workout-block span { color: var(--text); opacity: 0.75; }
+.workout-block svg { color: var(--block-color); }
 
 .workout-card-actions {
   display: grid;
