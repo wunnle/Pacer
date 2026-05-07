@@ -165,8 +165,8 @@ button.toggle.on {
   grid-template-columns: 1fr 1fr;
   gap: 8px;
   padding-top: 12px;
-  margin: 0 -16px -16px;
-  padding: 12px 16px 16px;
+  margin: 0 -16px -13px;
+  padding: 12px 16px 13px;
   border-top: 1px solid var(--bg-3);
 }
 .workout-card-actions button { font-size: 13px; padding: 10px 8px; }
