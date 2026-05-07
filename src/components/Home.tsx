@@ -25,6 +25,7 @@ type Particle = { id: number; word: string; x: number; nudge: number };
 export function Home({ workouts, onNew, onEdit, onStart }: Props) {
   const [soundEnabled, setSoundEnabled] = useState(() => loadSettings().sfxEnabled);
   const [particles, setParticles] = useState<Particle[]>([]);
+  const [heartBounce, setHeartBounce] = useState(0);
   const queuedWordRef = useRef<string | null>(null);
   const queueTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastWordRef = useRef<string | null>(null);
@@ -49,6 +50,7 @@ export function Home({ workouts, onNew, onEdit, onStart }: Props) {
       queueTimerRef.current = setTimeout(() => { queuedWordRef.current = null; }, 1000);
     }
     lastWordRef.current = word;
+    setHeartBounce((n) => n + 1);
     const id = ++counterRef.current;
     setParticles((p) => [...p.map((pt) => ({ ...pt, nudge: pt.nudge + 3 })), { id, word, x, nudge: 0 }]);
     setTimeout(() => setParticles((p) => p.filter((pt) => pt.id !== id)), 1400);
@@ -128,7 +130,7 @@ export function Home({ workouts, onNew, onEdit, onStart }: Props) {
           <path d="M99.0525 147.555C98.6586 147.703 98.2626 147.849 97.8635 147.989L97.8624 147.988C98.2616 147.848 98.6585 147.703 99.0525 147.555Z" fill="#C4CED6"/>
           <path d="M102.853 145.963C104.436 145.23 105.971 144.43 107.456 143.567C106.888 124.602 94.3229 108.691 77.1766 103.337C66.1291 98.1468 58.4792 86.9218 58.4791 73.908C58.4794 55.959 73.03 41.4084 90.9789 41.4082C91.6047 41.4082 92.2271 41.4277 92.8442 41.4626C110.404 45.8421 125.49 58.69 131.934 77.0419C141.516 104.33 128.575 134.063 102.853 145.963Z" fill="#C4CED6"/>
           <circle cx="91.5593" cy="72.4882" r="7.4325" transform="rotate(-5.24366 91.5593 72.4882)" fill="#1E1E1E"/>
-          <path d="M266.826 42.0134C286.072 42.5412 301.246 58.5711 300.718 77.8171C300.474 86.7124 296.916 94.7355 291.262 100.743L291.333 100.795L247.818 146.323C242.209 152.191 232.854 152.243 227.18 146.437L184.379 102.634C177.151 96.0412 172.724 86.4607 173.013 75.9137C173.541 56.6678 189.571 41.4933 208.817 42.0212C220.565 42.3434 230.794 48.4417 236.863 57.5212C243.299 47.8882 254.39 41.6724 266.826 42.0134Z" fill="#E66261"/>
+          <path key={heartBounce} className="heart-bounce" d="M266.826 42.0134C286.072 42.5412 301.246 58.5711 300.718 77.8171C300.474 86.7124 296.916 94.7355 291.262 100.743L291.333 100.795L247.818 146.323C242.209 152.191 232.854 152.243 227.18 146.437L184.379 102.634C177.151 96.0412 172.724 86.4607 173.013 75.9137C173.541 56.6678 189.571 41.4933 208.817 42.0212C220.565 42.3434 230.794 48.4417 236.863 57.5212C243.299 47.8882 254.39 41.6724 266.826 42.0134Z" fill="#E66261"/>
         </svg>
         </div>
         <span className="app-footer-text">with love</span>
