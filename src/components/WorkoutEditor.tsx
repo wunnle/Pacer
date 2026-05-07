@@ -18,7 +18,6 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
-  ArrowLeft,
   GripVertical,
   Plus,
   Snowflake,
@@ -28,7 +27,7 @@ import {
   Waves,
 } from 'lucide-react';
 import type { Exercise, ExerciseType, Workout } from '../types';
-import { EXERCISE_LABELS, exerciseTotalSeconds, workoutTotalSeconds } from '../types';
+import { EXERCISE_LABELS, exerciseTotalSeconds } from '../types';
 import { uid, upsertWorkout } from '../lib/storage';
 import { formatDuration } from '../lib/format';
 import { DurationInput } from './DurationInput';
@@ -100,17 +99,8 @@ export function WorkoutEditor({ workout, onSaved, onCancel }: Props) {
     onSaved(w);
   };
 
-  const total = workoutTotalSeconds({ ...(workout ?? ({} as Workout)), exercises } as Workout);
-
   return (
     <>
-      <header className="app-header">
-        <button className="ghost icon" onClick={onCancel} aria-label="Back">
-          <ArrowLeft size={20} />
-        </button>
-        <div className="subtitle">{formatDuration(total)} total</div>
-      </header>
-
       <div className="col" style={{ gap: 12 }}>
         <div className="field">
           <label>Workout name</label>

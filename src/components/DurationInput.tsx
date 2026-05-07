@@ -50,7 +50,7 @@ export function DurationInput({ label, value, min = 0, step, secondsOnly = false
           disabled={safe <= min}
           aria-label={`Decrease ${label} by ${stepDown} seconds`}
         >
-          <Minus size={18} />
+          <Minus size={14} />
         </button>
         <div className="duration-value" aria-live="polite">
           {formatDisplay(safe, secondsOnly)}
@@ -61,7 +61,7 @@ export function DurationInput({ label, value, min = 0, step, secondsOnly = false
           onClick={() => adjust(stepUp)}
           aria-label={`Increase ${label} by ${stepUp} seconds`}
         >
-          <Plus size={18} />
+          <Plus size={14} />
         </button>
       </div>
     </div>

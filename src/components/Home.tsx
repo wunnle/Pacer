@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Mic, MicOff, Pencil, Play, Plus, Trash2, Volume2, VolumeX } from 'lucide-react';
+import { Pencil, Play, Plus, Trash2, Volume2, VolumeX } from 'lucide-react';
 import type { Workout } from '../types';
 import { workoutTotalSeconds } from '../types';
 import { deleteWorkout } from '../lib/storage';
@@ -17,18 +17,12 @@ interface Props {
 const appName = typeof window !== 'undefined' && window.location.hostname.startsWith('spsk.') ? 'SPSK' : 'Pacer';
 
 export function Home({ workouts, onChange, onNew, onEdit, onStart }: Props) {
-  const [voiceEnabled, setVoiceEnabled] = useState(() => loadSettings().voiceEnabled);
-  const [sfxEnabled, setSfxEnabled] = useState(() => loadSettings().sfxEnabled);
+  const [soundEnabled, setSoundEnabled] = useState(() => loadSettings().sfxEnabled);
 
-  const toggleVoice = () => {
-    const next = !voiceEnabled;
-    setVoiceEnabled(next);
-    saveSettings({ voiceEnabled: next });
-  };
-  const toggleSfx = () => {
-    const next = !sfxEnabled;
-    setSfxEnabled(next);
-    saveSettings({ sfxEnabled: next });
+  const toggleSound = () => {
+    const next = !soundEnabled;
+    setSoundEnabled(next);
+    saveSettings({ sfxEnabled: next, voiceEnabled: next });
   };
 
   const handleDelete = (id: string, name: string) => {
@@ -45,20 +39,12 @@ export function Home({ workouts, onChange, onNew, onEdit, onStart }: Props) {
         </div>
         <div className="row" style={{ gap: 4 }}>
           <button
-            className={`icon toggle ${sfxEnabled ? 'on' : 'off'}`}
-            onClick={toggleSfx}
-            aria-label={sfxEnabled ? 'Disable sounds' : 'Enable sounds'}
-            title={sfxEnabled ? 'Sounds on' : 'Sounds off'}
+            className={`icon toggle ${soundEnabled ? 'on' : 'off'}`}
+            onClick={toggleSound}
+            aria-label={soundEnabled ? 'Disable sound' : 'Enable sound'}
+            title={soundEnabled ? 'Sound on' : 'Sound off'}
           >
-            {sfxEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
-          </button>
-          <button
-            className={`icon toggle ${voiceEnabled ? 'on' : 'off'}`}
-            onClick={toggleVoice}
-            aria-label={voiceEnabled ? 'Disable voice' : 'Enable voice'}
-            title={voiceEnabled ? 'Voice on' : 'Voice off'}
-          >
-            {voiceEnabled ? <Mic size={20} /> : <MicOff size={20} />}
+            {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
           </button>
           <button className="primary" onClick={onNew} style={{ marginLeft: 4 }}>
             <Plus size={16} />
