@@ -52,7 +52,7 @@ export function Home({ workouts, onNew, onEdit, onStart }: Props) {
     lastWordRef.current = word;
     setHeartBounce((n) => n + 1);
     const id = ++counterRef.current;
-    setParticles((p) => [...p.map((pt) => ({ ...pt, nudge: pt.nudge + 15 })), { id, word, x, nudge: 0 }]);
+    setParticles((p) => [...p.map((pt) => ({ ...pt, nudge: pt.nudge + 7 })), { id, word, x, nudge: 0 }]);
     setTimeout(() => setParticles((p) => p.filter((pt) => pt.id !== id)), 1400);
   };
 
