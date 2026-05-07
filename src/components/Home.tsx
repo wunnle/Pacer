@@ -1,10 +1,36 @@
 import { useState } from 'react';
-import { Pencil, Play, Plus, Trash2, Volume2, VolumeX } from 'lucide-react';
-import type { Workout } from '../types';
+import { Pencil, Play, Plus, Snowflake, Sparkles, Sun, Trash2, Volume2, VolumeX, Waves } from 'lucide-react';
+import type { Exercise, ExerciseType, Workout } from '../types';
 import { workoutTotalSeconds } from '../types';
 import { deleteWorkout } from '../lib/storage';
 import { formatDuration } from '../lib/format';
 import { loadSettings, saveSettings } from '../lib/settings';
+
+const exerciseIconMap: Record<ExerciseType, typeof Sun> = {
+  warmup: Sun,
+  fastslow: Waves,
+  taichi: Sparkles,
+  cooldown: Snowflake,
+};
+
+const exerciseColorMap: Record<ExerciseType, string> = {
+  warmup: '#facc15',
+  fastslow: '#34d399',
+  taichi: '#c084fc',
+  cooldown: '#38bdf8',
+};
+
+function exerciseSummary(ex: Exercise): string {
+  switch (ex.type) {
+    case 'warmup':
+    case 'cooldown':
+      return formatDuration(ex.duration);
+    case 'fastslow':
+      return `${ex.repeats}× ${formatDuration(ex.fastDuration)}/${formatDuration(ex.slowDuration)}`;
+    case 'taichi':
+      return `${ex.name} · ${ex.sets} sets`;
+  }
+}
 
 interface Props {
   workouts: Workout[];
@@ -37,20 +63,14 @@ export function Home({ workouts, onChange, onNew, onEdit, onStart }: Props) {
           <h1>{appName}</h1>
           <div className="subtitle">Real-time workout pacing</div>
         </div>
-        <div className="row" style={{ gap: 4 }}>
-          <button
-            className={`icon toggle ${soundEnabled ? 'on' : 'off'}`}
-            onClick={toggleSound}
-            aria-label={soundEnabled ? 'Disable sound' : 'Enable sound'}
-            title={soundEnabled ? 'Sound on' : 'Sound off'}
-          >
-            {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
-          </button>
-          <button className="primary" onClick={onNew} style={{ marginLeft: 4 }}>
-            <Plus size={16} />
-            <span>New</span>
-          </button>
-        </div>
+        <button
+          className={`icon toggle ${soundEnabled ? 'on' : 'off'}`}
+          onClick={toggleSound}
+          aria-label={soundEnabled ? 'Disable sound' : 'Enable sound'}
+          title={soundEnabled ? 'Sound on' : 'Sound off'}
+        >
+          {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+        </button>
       </header>
 
       {workouts.length === 0 ? (
@@ -61,28 +81,45 @@ export function Home({ workouts, onChange, onNew, onEdit, onStart }: Props) {
       ) : (
         <div className="list">
           {workouts.map((w) => (
-            <div key={w.id} className="workout-row">
-              <div className="col" style={{ gap: 4, flex: 1, minWidth: 0 }}>
+            <div key={w.id} className="workout-card-tall">
+              <div className="row between" style={{ marginBottom: 8 }}>
                 <div className="name">{w.name || 'Untitled'}</div>
-                <div className="meta">
-                  {w.exercises.length} {w.exercises.length === 1 ? 'block' : 'blocks'} · {formatDuration(workoutTotalSeconds(w))}
-                </div>
+                <div className="meta">{formatDuration(workoutTotalSeconds(w))}</div>
               </div>
-              <div className="row" style={{ gap: 4 }}>
-                <button className="icon ghost" onClick={() => onEdit(w.id)} aria-label="Edit">
-                  <Pencil size={16} />
+              <div className="workout-blocks">
+                {w.exercises.map((ex) => {
+                  const Icon = exerciseIconMap[ex.type];
+                  return (
+                    <div key={ex.id} className="workout-block" style={{ '--block-color': exerciseColorMap[ex.type] } as React.CSSProperties}>
+                      <Icon size={12} />
+                      <span>{exerciseSummary(ex)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="workout-card-actions">
+                <button className="ghost" onClick={() => onEdit(w.id)}>
+                  <Pencil size={14} />
+                  <span>Edit</span>
                 </button>
-                <button className="icon ghost danger" onClick={() => handleDelete(w.id, w.name)} aria-label="Delete">
-                  <Trash2 size={16} />
+                <button className="ghost danger" onClick={() => handleDelete(w.id, w.name)}>
+                  <Trash2 size={14} />
+                  <span>Delete</span>
                 </button>
-                <button className="primary icon" onClick={() => onStart(w.id)} aria-label="Start">
-                  <Play size={16} />
+                <button className="primary" onClick={() => onStart(w.id)}>
+                  <Play size={14} />
+                  <span>Start</span>
                 </button>
               </div>
             </div>
           ))}
         </div>
       )}
+
+      <button className="primary" onClick={onNew} style={{ marginTop: 10, width: '100%' }}>
+        <Plus size={16} />
+        <span>New workout</span>
+      </button>
 
       <footer className="app-footer">
         <span className="app-footer-text">made for</span>

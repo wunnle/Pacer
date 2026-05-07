@@ -147,6 +147,43 @@ button.toggle.on {
 .workout-row .meta { color: var(--muted); font-size: 13px; }
 .workout-row .name { font-weight: 600; font-size: 16px; }
 
+.workout-card-tall {
+  padding: 16px;
+  background: var(--bg-2);
+  border: 1px solid var(--bg-3);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.workout-card-tall .name { font-weight: 600; font-size: 17px; }
+.workout-card-tall .meta { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+
+.workout-blocks {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 14px;
+}
+.workout-block {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.workout-block svg { color: var(--block-color); flex-shrink: 0; }
+.workout-block span { color: var(--text); opacity: 0.75; }
+
+.workout-card-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.2fr;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--bg-3);
+}
+.workout-card-actions button { font-size: 13px; padding: 10px 8px; }
+
 .empty {
   padding: 28px 16px;
   text-align: center;
