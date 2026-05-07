@@ -425,6 +425,18 @@ button.toggle.on {
 }
 .footer-row.dim .footer-name { font-weight: 500; color: var(--muted); }
 
+.app-footer {
+  margin-top: auto;
+  padding-top: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.app-footer svg { display: block; }
+
 .controls { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 10px; }
 .controls button { padding: 14px 12px; font-size: 14px; }
 .controls button span { font-weight: 500; }
