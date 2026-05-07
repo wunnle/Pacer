@@ -461,11 +461,12 @@ button.toggle.on {
   font-size: 14px;
 }
 @media (min-width: 560px) {
-  .app-footer { font-size: 17px; gap: 8px; }
-  .app-footer svg { width: 96px; height: 39px; }
-  .app-footer-text { width: 72px; }
+  .app-footer { font-size: 15px; gap: 7px; }
+  .app-footer svg { width: 84px; height: 34px; }
+  .app-footer-text { width: 62px; }
 }
 .app-footer svg { display: block; flex-shrink: 0; }
+.app-footer, .app-footer * { user-select: none; -webkit-user-select: none; }
 .logo-wrap { position: relative; display: flex; }
 .heart-bounce {
   transform-origin: 243px 94px;
