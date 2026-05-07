@@ -25,6 +25,7 @@ import {
   Sun,
   Trash2,
   Waves,
+  ArrowLeft,
 } from 'lucide-react';
 import type { Exercise, ExerciseType, Workout } from '../types';
 import { EXERCISE_LABELS, exerciseTotalSeconds } from '../types';
@@ -36,6 +37,7 @@ interface Props {
   workout?: Workout;
   onSaved: (w: Workout) => void;
   onCancel: () => void;
+  onDelete?: () => void;
 }
 
 function newExercise(type: ExerciseType): Exercise {
@@ -59,7 +61,7 @@ const exerciseIconMap: Record<ExerciseType, typeof Sun> = {
   cooldown: Snowflake,
 };
 
-export function WorkoutEditor({ workout, onSaved, onCancel }: Props) {
+export function WorkoutEditor({ workout, onSaved, onCancel, onDelete }: Props) {
   const [name, setName] = useState(workout?.name ?? 'My workout');
   const [exercises, setExercises] = useState<Exercise[]>(workout?.exercises ?? []);
 
@@ -141,7 +143,15 @@ export function WorkoutEditor({ workout, onSaved, onCancel }: Props) {
       </div>
 
       <div className="bottom-bar">
-        <button className="ghost" onClick={onCancel}>Cancel</button>
+        <button className="ghost icon" onClick={onCancel} aria-label="Back"><ArrowLeft size={18} /></button>
+        {onDelete && (
+          <button className="ghost danger" onClick={() => {
+            if (confirm(`Delete "${name.trim() || 'Untitled'}"?`)) onDelete();
+          }}>
+            <Trash2 size={16} />
+            <span>Delete</span>
+          </button>
+        )}
         <button className="primary" onClick={save} disabled={exercises.length === 0}>Save</button>
       </div>
     </>

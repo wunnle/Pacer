@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Workout } from './types';
-import { loadWorkouts } from './lib/storage';
+import { deleteWorkout, loadWorkouts } from './lib/storage';
 import { Home } from './components/Home';
 import { WorkoutEditor } from './components/WorkoutEditor';
 import { WorkoutRunner } from './components/WorkoutRunner';
@@ -44,6 +44,10 @@ export default function App() {
           void saved;
         }}
         onCancel={() => setScreen({ name: 'home' })}
+        onDelete={screen.workoutId ? () => {
+          setWorkouts(deleteWorkout(screen.workoutId!));
+          setScreen({ name: 'home' });
+        } : undefined}
       />
     );
   }

@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { Pencil, Play, Plus, Trash2, Volume2, VolumeX } from 'lucide-react';
+import { Pencil, Play, Plus, Volume2, VolumeX } from 'lucide-react';
 import type { Workout } from '../types';
 import { workoutTotalSeconds } from '../types';
-import { deleteWorkout } from '../lib/storage';
 import { formatDuration } from '../lib/format';
 import { loadSettings, saveSettings } from '../lib/settings';
 
@@ -19,7 +18,7 @@ const isSpsk = typeof window !== 'undefined' && window.location.hostname.startsW
 const appName = isSpsk ? 'SPSK' : 'Pacer';
 const appSubtitle = isSpsk ? 'Serçe Parmak Spor Kulübü' : 'Real-time workout pacing';
 
-export function Home({ workouts, onChange, onNew, onEdit, onStart }: Props) {
+export function Home({ workouts, onNew, onEdit, onStart }: Props) {
   const [soundEnabled, setSoundEnabled] = useState(() => loadSettings().sfxEnabled);
 
   const toggleSound = () => {
@@ -28,10 +27,6 @@ export function Home({ workouts, onChange, onNew, onEdit, onStart }: Props) {
     saveSettings({ sfxEnabled: next, voiceEnabled: next });
   };
 
-  const handleDelete = (id: string, name: string) => {
-    if (!confirm(`Delete "${name}"?`)) return;
-    onChange(deleteWorkout(id));
-  };
 
   return (
     <>
@@ -70,10 +65,6 @@ export function Home({ workouts, onChange, onNew, onEdit, onStart }: Props) {
                 <button className="ghost" onClick={() => onEdit(w.id)}>
                   <Pencil size={14} />
                   <span>Edit</span>
-                </button>
-                <button className="ghost danger" onClick={() => handleDelete(w.id, w.name)}>
-                  <Trash2 size={14} />
-                  <span>Delete</span>
                 </button>
                 <button className="primary" onClick={() => onStart(w.id)}>
                   <Play size={14} />
