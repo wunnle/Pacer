@@ -15,7 +15,9 @@ interface Props {
   onStart: (id: string) => void;
 }
 
-const appName = typeof window !== 'undefined' && window.location.hostname.startsWith('spsk.') ? 'SPSK' : 'Pacer';
+const isSpsk = typeof window !== 'undefined' && window.location.hostname.startsWith('spsk.');
+const appName = isSpsk ? 'SPSK' : 'Pacer';
+const appSubtitle = isSpsk ? 'Serçe Parmak Spor Kulübü' : 'Real-time workout pacing';
 
 export function Home({ workouts, onChange, onNew, onEdit, onStart }: Props) {
   const [soundEnabled, setSoundEnabled] = useState(() => loadSettings().sfxEnabled);
@@ -36,7 +38,7 @@ export function Home({ workouts, onChange, onNew, onEdit, onStart }: Props) {
       <header className="app-header">
         <div>
           <h1>{appName}</h1>
-          <div className="subtitle">Real-time workout pacing</div>
+          <div className="subtitle">{appSubtitle}</div>
         </div>
         <button
           className={`icon toggle ${soundEnabled ? 'on' : 'off'}`}
