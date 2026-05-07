@@ -18,7 +18,7 @@ const isSpsk = typeof window !== 'undefined' && window.location.hostname.startsW
 const appName = isSpsk ? 'SPSK' : 'Pacer';
 const appSubtitle = isSpsk ? 'Serçe Parmak Spor Kulübü' : 'Real-time workout pacing';
 
-const WORDS = ['pır', 'tık', 'mup', 'kırt'];
+const WORDS = ['pır', 'tık', 'mup', 'kırt', 'kık'];
 
 type Particle = { id: number; word: string; x: number };
 
@@ -31,7 +31,7 @@ export function Home({ workouts, onNew, onEdit, onStart }: Props) {
 
   const handleFooterTap = (e: React.MouseEvent<HTMLElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
+    const x = window.innerWidth / 2 - rect.left;
     let word: string;
     if (queuedWordRef.current) {
       word = queuedWordRef.current;
