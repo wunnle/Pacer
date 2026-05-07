@@ -435,7 +435,10 @@ button.toggle.on {
   color: var(--muted);
   font-size: 13px;
 }
-.app-footer svg { display: block; }
+.app-footer svg { display: block; flex-shrink: 0; }
+.app-footer-text { width: 52px; }
+.app-footer-text:first-child { text-align: right; }
+.app-footer-text:last-child { text-align: left; }
 
 .controls { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 10px; }
 .controls button { padding: 14px 12px; font-size: 14px; }
