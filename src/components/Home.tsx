@@ -20,7 +20,7 @@ const appSubtitle = isSpsk ? 'Serçe Parmak Spor Kulübü' : 'Real-time workout 
 
 const WORDS = ['pır', 'tık', 'mup', 'kırt', 'kık'];
 
-type Particle = { id: number; word: string; x: number };
+type Particle = { id: number; word: string; x: number; nudge: number };
 
 export function Home({ workouts, onNew, onEdit, onStart }: Props) {
   const [soundEnabled, setSoundEnabled] = useState(() => loadSettings().sfxEnabled);
@@ -50,7 +50,7 @@ export function Home({ workouts, onNew, onEdit, onStart }: Props) {
     }
     lastWordRef.current = word;
     const id = ++counterRef.current;
-    setParticles((p) => [...p, { id, word, x }]);
+    setParticles((p) => [...p.map((pt) => ({ ...pt, nudge: pt.nudge + 3 })), { id, word, x, nudge: 0 }]);
     setTimeout(() => setParticles((p) => p.filter((pt) => pt.id !== id)), 1400);
   };
 
@@ -118,7 +118,7 @@ export function Home({ workouts, onNew, onEdit, onStart }: Props) {
         <span className="app-footer-text">made for</span>
         <div className="logo-wrap">
         {particles.map((p) => (
-          <span key={p.id} className="logo-particle" style={{ left: p.x }}>{p.word}</span>
+          <span key={p.id} className="logo-particle" style={{ left: p.x, '--nudge': `${p.nudge}px` } as React.CSSProperties}>{p.word}</span>
         ))}
         <svg ref={logoRef} width="78" height="32" viewBox="0 0 473 192" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="logo">
           <path d="M358.5 37C367.93 37.0001 375.617 44.4595 375.984 53.7998H376V86H376.03C376.563 77.0766 384.181 70 393.5 70C402.819 70.0001 410.436 77.0767 410.969 86H411.063C411.803 77.0373 419.102 70 428 70C436.898 70.0001 444.197 77.0373 444.937 86H445V104H444.762C442.246 130.373 420.032 151 393 151C365.968 151 343.754 130.373 341.238 104H341V53.7998H341.015C341.382 44.4594 349.07 37 358.5 37Z" fill="#E8C09C"/>
