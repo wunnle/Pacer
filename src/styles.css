@@ -463,7 +463,7 @@ button.toggle.on {
 @media (min-width: 560px) {
   .app-footer { font-size: 15px; gap: 7px; }
   .app-footer svg { width: 84px; height: 34px; }
-  .app-footer-text { width: 62px; }
+  .app-footer-text { width: 66px; }
 }
 .app-footer svg { display: block; flex-shrink: 0; }
 .app-footer, .app-footer * { user-select: none; -webkit-user-select: none; }
