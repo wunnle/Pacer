@@ -100,6 +100,22 @@ export function WorkoutRunner({ workout, autoStart = false, onExit }: Props) {
   const baseElapsedRef = useRef(0);
   const rafRef = useRef<number | null>(null);
   const lastCountdownSecRef = useRef<number>(-1);
+  const wakeLockRef = useRef<WakeLockSentinel | null>(null);
+
+  useEffect(() => {
+    const acquire = async () => {
+      if (!('wakeLock' in navigator)) return;
+      try {
+        wakeLockRef.current = await navigator.wakeLock.request('screen');
+      } catch { /* ignore — user denied or not supported */ }
+    };
+    const release = () => { wakeLockRef.current?.release(); wakeLockRef.current = null; };
+    // Re-acquire when tab becomes visible again (iOS releases on background)
+    const onVisibility = () => { if (document.visibilityState === 'visible' && running) acquire(); };
+    if (running && !done) acquire(); else release();
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => { document.removeEventListener('visibilitychange', onVisibility); release(); };
+  }, [running, done]);
 
   const current = plan[stepIdx];
   const next = plan[stepIdx + 1];
