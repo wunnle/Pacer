@@ -31,10 +31,9 @@ export function Home({ workouts, onNew, onEdit, onStart }: Props) {
 
   const logoRef = useRef<SVGSVGElement>(null);
 
-  const handleFooterTap = (e: React.MouseEvent<HTMLElement>) => {
-    const footerRect = e.currentTarget.getBoundingClientRect();
+  const handleFooterTap = () => {
     const logoRect = logoRef.current?.getBoundingClientRect();
-    const x = logoRect ? logoRect.left + logoRect.width / 2 - footerRect.left : footerRect.width / 2;
+    const x = logoRect ? logoRect.width / 2 : 39;
     let word: string;
     if (queuedWordRef.current) {
       word = queuedWordRef.current;
