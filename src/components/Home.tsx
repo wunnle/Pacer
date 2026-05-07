@@ -25,16 +25,23 @@ type Particle = { id: number; word: string; x: number };
 export function Home({ workouts, onNew, onEdit, onStart }: Props) {
   const [soundEnabled, setSoundEnabled] = useState(() => loadSettings().sfxEnabled);
   const [particles, setParticles] = useState<Particle[]>([]);
+  const queuedWordRef = useRef<string | null>(null);
   const lastWordRef = useRef<string | null>(null);
   const counterRef = useRef(0);
 
-  const handleLogoTap = (e: React.MouseEvent<SVGSVGElement>) => {
+  const handleFooterTap = (e: React.MouseEvent<HTMLElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     let word: string;
-    do {
-      word = WORDS[Math.floor(Math.random() * WORDS.length)];
-    } while (word === lastWordRef.current && WORDS.length > 1);
+    if (queuedWordRef.current) {
+      word = queuedWordRef.current;
+      queuedWordRef.current = null;
+    } else {
+      do {
+        word = WORDS[Math.floor(Math.random() * WORDS.length)];
+      } while (word === lastWordRef.current && WORDS.length > 1);
+      queuedWordRef.current = word;
+    }
     lastWordRef.current = word;
     const id = ++counterRef.current;
     setParticles((p) => [...p, { id, word, x }]);
@@ -101,13 +108,13 @@ export function Home({ workouts, onNew, onEdit, onStart }: Props) {
         <span>New workout</span>
       </button>
 
-      <footer className="app-footer">
+      <footer className="app-footer" onClick={handleFooterTap} style={{ cursor: 'pointer' }}>
         <span className="app-footer-text">made for</span>
         <div className="logo-wrap">
         {particles.map((p) => (
           <span key={p.id} className="logo-particle" style={{ left: p.x }}>{p.word}</span>
         ))}
-        <svg width="78" height="32" onClick={handleLogoTap} style={{ cursor: 'pointer' }} viewBox="0 0 473 192" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="logo">
+        <svg width="78" height="32" viewBox="0 0 473 192" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="logo">
           <path d="M358.5 37C367.93 37.0001 375.617 44.4595 375.984 53.7998H376V86H376.03C376.563 77.0766 384.181 70 393.5 70C402.819 70.0001 410.436 77.0767 410.969 86H411.063C411.803 77.0373 419.102 70 428 70C436.898 70.0001 444.197 77.0373 444.937 86H445V104H444.762C442.246 130.373 420.032 151 393 151C365.968 151 343.754 130.373 341.238 104H341V53.7998H341.015C341.382 44.4594 349.07 37 358.5 37Z" fill="#E8C09C"/>
           <path d="M142.898 51.2896L114.475 53.0083L105.899 78.6945L134.107 86.2289L142.898 51.2896Z" fill="#7E8FA0"/>
           <path d="M142.898 51.2896L124.301 64.9384L105.899 78.6945L134.107 86.2289L142.898 51.2896Z" fill="#657A8F"/>
