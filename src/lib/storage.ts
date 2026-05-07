@@ -4,7 +4,7 @@ const KEY = 'pacer.workouts.v1';
 
 const DEFAULT_WORKOUT: Workout = {
   id: 'default-serce-parmak',
-  name: 'Serçe Parmak',
+  name: 'Morning Walk',
   createdAt: 0,
   updatedAt: 0,
   exercises: [
