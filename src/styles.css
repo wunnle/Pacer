@@ -461,6 +461,22 @@ button.toggle.on {
   font-size: 14px;
 }
 .app-footer svg { display: block; flex-shrink: 0; }
+.logo-wrap { position: relative; display: flex; }
+.logo-particle {
+  position: absolute;
+  bottom: 100%;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  pointer-events: none;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  animation: particle-float 0.85s ease-out forwards;
+}
+@keyframes particle-float {
+  0%   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-32px); }
+}
 .app-footer-text { width: 58px; }
 .app-footer-text:first-child { text-align: right; }
 .app-footer-text:last-child { text-align: left; }
