@@ -474,9 +474,11 @@ button.toggle.on {
   animation: particle-float 1.3s ease-out forwards;
 }
 @keyframes particle-float {
-  0%   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  0%   { opacity: 1; transform: translateX(-50%) translateY(0) scale(0.6); }
+  12%  { opacity: 1; transform: translateX(-50%) translateY(-4px) scale(1.15); }
+  25%  { transform: translateX(-50%) translateY(-8px) scale(1); }
   60%  { opacity: 1; }
-  100% { opacity: 0; transform: translateX(-50%) translateY(-40px); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-40px) scale(0.9); }
 }
 .app-footer-text { width: 58px; }
 .app-footer-text:first-child { text-align: right; }

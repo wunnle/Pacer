@@ -26,6 +26,7 @@ export function Home({ workouts, onNew, onEdit, onStart }: Props) {
   const [soundEnabled, setSoundEnabled] = useState(() => loadSettings().sfxEnabled);
   const [particles, setParticles] = useState<Particle[]>([]);
   const queuedWordRef = useRef<string | null>(null);
+  const queueTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastWordRef = useRef<string | null>(null);
   const counterRef = useRef(0);
 
@@ -38,11 +39,14 @@ export function Home({ workouts, onNew, onEdit, onStart }: Props) {
     if (queuedWordRef.current) {
       word = queuedWordRef.current;
       queuedWordRef.current = null;
+      if (queueTimerRef.current) clearTimeout(queueTimerRef.current);
     } else {
       do {
         word = WORDS[Math.floor(Math.random() * WORDS.length)];
       } while (word === lastWordRef.current && WORDS.length > 1);
       queuedWordRef.current = word;
+      if (queueTimerRef.current) clearTimeout(queueTimerRef.current);
+      queueTimerRef.current = setTimeout(() => { queuedWordRef.current = null; }, 1000);
     }
     lastWordRef.current = word;
     const id = ++counterRef.current;
