@@ -14,6 +14,8 @@ interface Props {
   onStart: (id: string) => void;
 }
 
+const appName = typeof window !== 'undefined' && window.location.hostname.startsWith('spsk.') ? 'SPSK' : 'Pacer';
+
 export function Home({ workouts, onChange, onNew, onEdit, onStart }: Props) {
   const [voiceEnabled, setVoiceEnabled] = useState(() => loadSettings().voiceEnabled);
   const [sfxEnabled, setSfxEnabled] = useState(() => loadSettings().sfxEnabled);
@@ -38,7 +40,7 @@ export function Home({ workouts, onChange, onNew, onEdit, onStart }: Props) {
     <>
       <header className="app-header">
         <div>
-          <h1>Pacer</h1>
+          <h1>{appName}</h1>
           <div className="subtitle">Real-time workout pacing</div>
         </div>
         <div className="row" style={{ gap: 4 }}>
