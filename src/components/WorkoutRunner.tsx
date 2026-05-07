@@ -2,8 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft,
   Coffee,
-  Mic,
-  MicOff,
   Pause,
   Play,
   Rabbit,
@@ -96,8 +94,9 @@ export function WorkoutRunner({ workout, autoStart = false, onExit }: Props) {
   const [elapsedMs, setElapsedMs] = useState(0);
   const [running, setRunning] = useState(false);
   const [done, setDone] = useState(false);
-  const [voiceEnabled, setVoiceEnabled] = useState(() => loadSettings().voiceEnabled);
-  const [sfxEnabled, setSfxEnabled] = useState(() => loadSettings().sfxEnabled);
+  const [soundEnabled, setSoundEnabled] = useState(() => loadSettings().sfxEnabled);
+  const sfxEnabled = soundEnabled;
+  const voiceEnabled = soundEnabled;
 
   const startedAtRef = useRef<number | null>(null);
   const baseElapsedRef = useRef(0);
@@ -287,15 +286,10 @@ export function WorkoutRunner({ workout, autoStart = false, onExit }: Props) {
     lastCountdownSecRef.current = -1;
   };
 
-  const toggleVoice = () => {
-    const v = !voiceEnabled;
-    setVoiceEnabled(v);
-    saveSettings({ voiceEnabled: v });
-  };
-  const toggleSfx = () => {
-    const v = !sfxEnabled;
-    setSfxEnabled(v);
-    saveSettings({ sfxEnabled: v });
+  const toggleSound = () => {
+    const v = !soundEnabled;
+    setSoundEnabled(v);
+    saveSettings({ sfxEnabled: v, voiceEnabled: v });
   };
 
   if (!current) {
@@ -322,20 +316,12 @@ export function WorkoutRunner({ workout, autoStart = false, onExit }: Props) {
         <div className="subtitle">{workout.name}</div>
         <div className="row" style={{ gap: 4 }}>
           <button
-            className={`icon toggle ${sfxEnabled ? 'on' : 'off'}`}
-            onClick={toggleSfx}
-            aria-label={sfxEnabled ? 'Disable sounds' : 'Enable sounds'}
-            title={sfxEnabled ? 'Sounds on' : 'Sounds off'}
+            className={`icon toggle ${soundEnabled ? 'on' : 'off'}`}
+            onClick={toggleSound}
+            aria-label={soundEnabled ? 'Disable sound' : 'Enable sound'}
+            title={soundEnabled ? 'Sound on' : 'Sound off'}
           >
-            {sfxEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
-          </button>
-          <button
-            className={`icon toggle ${voiceEnabled ? 'on' : 'off'}`}
-            onClick={toggleVoice}
-            aria-label={voiceEnabled ? 'Disable voice' : 'Enable voice'}
-            title={voiceEnabled ? 'Voice on' : 'Voice off'}
-          >
-            {voiceEnabled ? <Mic size={18} /> : <MicOff size={18} />}
+            {soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
           </button>
         </div>
       </header>
