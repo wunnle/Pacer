@@ -95,8 +95,6 @@ export function WorkoutRunner({ workout, autoStart = false, onExit }: Props) {
   const [running, setRunning] = useState(false);
   const [done, setDone] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(() => loadSettings().sfxEnabled);
-  const sfxEnabled = soundEnabled;
-  const voiceEnabled = soundEnabled;
 
   const startedAtRef = useRef<number | null>(null);
   const baseElapsedRef = useRef(0);
