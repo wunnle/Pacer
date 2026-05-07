@@ -460,11 +460,7 @@ button.toggle.on {
   color: var(--muted);
   font-size: 14px;
 }
-@media (min-width: 560px) {
-  .app-footer { font-size: 15px; gap: 7px; }
-  .app-footer svg { width: 84px; height: 34px; }
-  .app-footer-text { width: 100px; }
-}
+
 .app-footer svg { display: block; flex-shrink: 0; }
 .app-footer, .app-footer * { user-select: none; -webkit-user-select: none; }
 .logo-wrap { position: relative; display: flex; }
@@ -502,4 +498,10 @@ button.toggle.on {
 
 .controls { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 10px; }
 .controls button { padding: 14px 12px; font-size: 14px; }
+
+@media (min-width: 560px) {
+  .app-footer { font-size: 15px; gap: 7px; }
+  .app-footer svg { width: 84px; height: 34px; }
+  .app-footer-text { width: 100px; }
+}
 .controls button span { font-weight: 500; }
