@@ -98,7 +98,7 @@ export function Home({ workouts, onChange, onNew, onEdit, onStart }: Props) {
 
       <footer className="app-footer">
         <span className="app-footer-text">made for</span>
-        <svg width="72" height="29" viewBox="0 0 473 192" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="logo">
+        <svg width="90" height="37" viewBox="0 0 473 192" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="logo">
           <path d="M358.5 37C367.93 37.0001 375.617 44.4595 375.984 53.7998H376V86H376.03C376.563 77.0766 384.181 70 393.5 70C402.819 70.0001 410.436 77.0767 410.969 86H411.063C411.803 77.0373 419.102 70 428 70C436.898 70.0001 444.197 77.0373 444.937 86H445V104H444.762C442.246 130.373 420.032 151 393 151C365.968 151 343.754 130.373 341.238 104H341V53.7998H341.015C341.382 44.4594 349.07 37 358.5 37Z" fill="#E8C09C"/>
           <path d="M142.898 51.2896L114.475 53.0083L105.899 78.6945L134.107 86.2289L142.898 51.2896Z" fill="#7E8FA0"/>
           <path d="M142.898 51.2896L124.301 64.9384L105.899 78.6945L134.107 86.2289L142.898 51.2896Z" fill="#657A8F"/>

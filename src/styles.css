@@ -433,10 +433,10 @@ button.toggle.on {
   justify-content: center;
   gap: 6px;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 15px;
 }
 .app-footer svg { display: block; flex-shrink: 0; }
-.app-footer-text { width: 52px; }
+.app-footer-text { width: 62px; }
 .app-footer-text:first-child { text-align: right; }
 .app-footer-text:last-child { text-align: left; }
 
